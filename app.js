@@ -31,12 +31,32 @@ const gname = g => g.replace(/^[A-Z]\d*\s*/, '');
 
 // ---------- audio ----------
 let onEnd = null;
-function play(k, done, r) {
-  onEnd = done || null;
-  P.src = src(k); P.playbackRate = r || rate; P.play().catch(() => {});
+// 进到一站就把这站的音频先下载好，点的时候直接播放（GitHub 在国内一个文件要等 1～6 秒）
+const blobs = {}, loading = {};
+function fetchA(k, n = 2) {
+  if (blobs[k]) return Promise.resolve(blobs[k]);
+  return loading[k] || (loading[k] = fetch(src(k)).then(r => { if (!r.ok) throw 0; return r.blob(); })
+    .then(b => blobs[k] = URL.createObjectURL(b))
+    .catch(() => { delete loading[k]; if (n > 0) return fetchA(k, n - 1); throw 0; }));
 }
+function prefetch(ks) {
+  ks = [...new Set(ks.filter(Boolean))]; let i = 0;
+  const go = () => { if (i < ks.length) fetchA(ks[i++]).catch(() => {}).finally(go); };
+  for (let j = 0; j < 4; j++) go();
+}
+const sceneKeys = sc => [...sc.dialogues.flatMap(d => d.lines.map(l => l.a)), ...sc.xv.flatMap(x => [x.a1, x.a2]), ...sc.listen.map(x => x.a), ...sc.vocab.flatMap(v => [v.a1, v.a2])];
+const busy = on => document.body.classList.toggle('aload', on);
+let tries = 0;
+function play(k, done, r) {
+  onEnd = done || null; tries = 0;
+  P.src = blobs[k] || src(k); P.playbackRate = r || rate;
+  if (!blobs[k]) { busy(true); fetchA(k).catch(() => {}); }
+  P.play().catch(() => {});
+}
+P.addEventListener('playing', () => busy(false));
+P.addEventListener('error', () => { if (P.src.startsWith('blob:') || tries++ > 1) return busy(false); const u = P.src.split('?')[0]; P.src = u + '?r=' + tries; P.play().catch(() => {}); });
 P.addEventListener('ended', () => { const f = onEnd; onEnd = null; f && f(); });
-function stop() { onEnd = null; P.pause(); }
+function stop() { onEnd = null; P.pause(); busy(false); }
 
 // ---------- router ----------
 function route() {
@@ -67,7 +87,7 @@ function home() {
     </a>
     <div class="meter"><span style="width:${nDone / D.length * 100}%"></span></div>
     <div class="meter-t">已经走过 ${nDone} 站，还剩 ${D.length - nDone} 站</div>
-  </section>${vlogShelf()}<div class="route">`;
+  </section><div class="route">`;
   let g = '';
   D.forEach(s => {
     if (s.group !== g) { g = s.group; h += `<div class="line-name" style="--c:${lineOf(s)}"><span>${esc(gname(g))}</span></div>`; }
@@ -82,6 +102,7 @@ function home() {
 
 // ---------- scene ----------
 function scene(sc, tab, di) {
+  prefetch(sceneKeys(sc));
   const c = lineOf(sc);
   let h = `<div class="scene" style="--c:${c}"><a class="back" href="#/">${ic('left', 16)}全部场景</a>
   <div class="sh"><small>第 ${+sc.no} 站　${esc(gname(sc.group))}</small><h2>${esc(sc.name)}</h2></div>

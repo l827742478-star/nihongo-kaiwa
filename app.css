@@ -219,3 +219,6 @@ textarea::placeholder{font-family:var(--f)}
 .sbox.a .sc-n b{color:var(--ok)}.sbox.b .sc-n b{color:#d49a2a}.sbox.c .sc-n b{color:var(--rec)}
 .sc-t{min-width:0}.sc-t>b{font-size:14.5px}.sc-t .res{font-size:17px;margin-top:4px}
 .sc-t small{display:block;font-size:12px;color:var(--mute);margin-top:4px}
+/* 音频还在下载时 */
+body.aload::after{content:'音频加载中…';position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom));transform:translateX(-50%);background:var(--navy);color:#fff;font-size:13px;padding:8px 16px;border-radius:999px;box-shadow:0 4px 14px rgba(0,0,0,.18);z-index:99;pointer-events:none;animation:aload .2s}
+@keyframes aload{from{opacity:0}}
