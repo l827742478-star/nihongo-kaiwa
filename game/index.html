@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="zh"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<title>便利店打工模拟</title>
+<meta name="description" content="Work a shift at a Tokyo convenience store. Customers only speak Japanese.">
+<style>
+:root{--bg:#f8f2e6;--ink:#3b3330;--sub:#8a7f74;--card:#fffdf8;--line:#3b3330;--brand:#e8857a;--brand2:#cf6c61;--red:#e8857a;--yel:#f7d77a;--track:#ece3d3}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{background:var(--bg);color:var(--ink);font-family:"PingFang SC","Hiragino Sans GB","Noto Sans SC",sans-serif;min-height:100vh;user-select:none}
+.app{max-width:480px;margin:0 auto;padding:10px 16px 24px}
+.jp{font-family:"Hiragino Maru Gothic ProN","Hiragino Sans","Noto Sans JP",sans-serif;font-weight:700}
+.hud{display:flex;justify-content:space-between;align-items:center;font-weight:800;font-size:14px;background:var(--brand);color:#fff;border-radius:14px;padding:8px 12px}
+.scene{position:relative;margin-top:10px;background:linear-gradient(#fff 0 70%,#f6e3d5 70%);border:3px solid var(--line);border-radius:20px;height:210px;overflow:hidden}
+.cav{position:absolute;left:18px;bottom:14px;font-size:84px;line-height:1;transition:transform .6s}
+.cav.out{transform:translateX(-160px)}.cav.mad{filter:hue-rotate(-30deg)}
+.who{position:absolute;left:14px;top:10px;font-size:12px;font-weight:800;color:var(--sub)}
+.pat{position:absolute;left:14px;top:28px;width:110px;height:8px;border-radius:4px;background:var(--track);overflow:hidden}.pat i{display:block;height:100%;background:var(--brand)}
+.log{position:absolute;left:120px;right:10px;top:8px;bottom:8px;display:flex;flex-direction:column;justify-content:flex-end;gap:6px}
+.bub{max-width:100%;padding:7px 11px;border-radius:14px;font-size:15px;line-height:1.35;border:2px solid var(--line);background:#fff;cursor:pointer}
+.bub small{display:block;font-size:12px;color:var(--sub);font-weight:600}
+.bub.me{align-self:flex-end;background:#fbe3e1;border-color:var(--brand2)}
+.bub .en{display:none}.bub.open .en{display:block}
+.hint{margin-top:8px;font-size:14px;font-weight:800;color:var(--brand2);min-height:20px}
+.counter{margin-top:6px;background:#fff7e6;border:3px solid var(--line);border-radius:18px;padding:10px;min-height:112px}
+.items{display:flex;gap:8px;flex-wrap:wrap}
+.it{width:62px;height:70px;border:2px dashed #b9a98a;border-radius:12px;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:30px;cursor:pointer;position:relative}
+.it small{font-size:11px;font-weight:700;color:var(--sub)}
+.it.ok{border:2px solid var(--brand);background:#fbe3e1}.it.ok:after{content:'✓';position:absolute;top:2px;right:5px;font-size:13px;color:var(--brand);font-weight:900}
+.it.hot{background:#ffe4d6}
+.stat{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;font-size:13px;font-weight:800}
+.stat span{background:#fff;border:2px solid var(--track);border-radius:20px;padding:3px 9px}.stat span.on{border-color:var(--brand);background:#fbe3e1}
+.row{display:grid;gap:7px;margin-top:9px}.talk{grid-template-columns:1fr 1fr}.tools{grid-template-columns:repeat(5,1fr)}
+.b{border:2px solid var(--line);background:#fff;border-radius:12px;padding:8px 6px;font:inherit;font-size:13px;font-weight:700;cursor:pointer;box-shadow:0 3px 0 var(--line);color:var(--ink);text-align:center}
+.b:active{transform:translateY(2px);box-shadow:0 1px 0 var(--line)}
+.b .jp{display:block;font-size:14px}.b small{display:block;font-size:11px;color:var(--sub);font-weight:600}
+.tools .b{font-size:24px;padding:6px 2px}.tools .b small{font-size:10px}
+.go{display:block;width:100%;margin-top:10px;border:3px solid var(--red);background:var(--red);color:#fff;border-radius:16px;padding:12px;font:inherit;font-size:18px;font-weight:900;box-shadow:0 4px 0 #b85a50;cursor:pointer}
+.go:disabled{opacity:.4}
+.panel{margin-top:10px;background:#fff;border:3px solid var(--line);border-radius:18px;padding:14px}
+.panel h3{font-size:20px}.panel li{font-size:14px;margin:6px 0 0 18px;line-height:1.4}
+.toast{position:fixed;left:50%;top:70px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:8px 14px;border-radius:20px;font-weight:800;font-size:14px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:9;max-width:90%;text-align:center}
+.toast.show{opacity:1}
+h1{font-size:36px;line-height:1.1;margin-top:24px}h1 span{color:var(--brand)}
+.lead{font-size:16px;margin-top:12px;line-height:1.5}
+.lg{margin-top:12px;background:#fff;border:2px solid var(--line);border-radius:14px;padding:10px 12px;font-size:14px;line-height:1.7}
+</style></head><body><div class="app" id="app"></div><div class="toast" id="toast"></div>
+<script>
+const D={"clerk": {"irasshai": {"jp": "いらっしゃいませ！", "en": "欢迎光临！", "a": "audio/clerk_irasshai.mp3"}, "heat": {"jp": "温めますか？", "en": "需要加热吗？", "a": "audio/clerk_heat.mp3"}, "bag": {"jp": "袋はご利用ですか？", "en": "需要袋子吗？", "a": "audio/clerk_bag.mp3"}, "point": {"jp": "ポイントカードはお持ちですか？", "en": "有积分卡吗？", "a": "audio/clerk_point.mp3"}, "thanks": {"jp": "ありがとうございました！", "en": "谢谢光临！", "a": "audio/clerk_thanks.mp3"}}, "huh": {"f": "audio/huh_f.mp3", "m": "audio/huh_m.mp3"}, "cs": [{"av": "👨‍💼", "who": "上班族大叔", "g": "m", "items": [{"e": "🍱", "n": "便当", "p": 550, "h": 1}, {"e": "🍵", "n": "绿茶", "p": 150, "h": 0}], "req": [], "heat": {"jp": "お願いします。", "en": "好的，麻烦了。", "want": 1, "a": "audio/c0_heat.mp3"}, "bag": {"jp": "袋お願いします。", "en": "请给我袋子。", "want": 1, "a": "audio/c0_bag.mp3"}, "point": {"jp": "ないです。", "en": "没有。", "want": 0, "a": "audio/c0_point.mp3"}, "bye": {"jp": "どうも。", "a": "audio/c0_bye.mp3"}}, {"av": "👩‍🎓", "who": "女学生", "g": "f", "items": [{"e": "🍙", "n": "饭团", "p": 160, "h": 0}, {"e": "🧃", "n": "果汁", "p": 130, "h": 0}], "req": [], "bag": {"jp": "あ、大丈夫です。", "en": "啊，不用了。（＝不要袋子）", "want": 0, "a": "audio/c1_bag.mp3"}, "point": {"jp": "あ、あります。", "en": "啊，有的。", "want": 1, "a": "audio/c1_point.mp3"}, "bye": {"jp": "ありがとうございます。", "a": "audio/c1_bye.mp3"}}, {"av": "👴", "who": "老爷爷", "g": "m", "items": [{"e": "🍱", "n": "便当", "p": 600, "h": 1}, {"e": "🍮", "n": "布丁", "p": 200, "h": 0}], "req": [{"jp": "お箸、2つちょうだい。", "en": "给我两双筷子。", "kind": "chop", "n": 2, "a": "audio/c2_req0.mp3"}], "heat": {"jp": "いや、いいです。", "en": "不用，没事。（＝不要）", "want": 0, "a": "audio/c2_heat.mp3"}, "bag": {"jp": "お願いします。", "en": "好的，麻烦了。", "want": 1, "a": "audio/c2_bag.mp3"}, "point": {"jp": "ないよ。", "en": "没有哦。", "want": 0, "a": "audio/c2_point.mp3"}, "bye": {"jp": "はい、どうも。", "a": "audio/c2_bye.mp3"}}, {"av": "👩‍💼", "who": "职场女性", "g": "f", "items": [{"e": "🥗", "n": "沙拉", "p": 420, "h": 0}], "req": [{"jp": "あと、からあげ一つください。", "en": "再要一份炸鸡块。", "kind": "snack", "n": 1, "a": "audio/c3_req0.mp3"}], "bag": {"jp": "大丈夫です。", "en": "不用了。（＝不要袋子）", "want": 0, "a": "audio/c3_bag.mp3"}, "point": {"jp": "はい。", "en": "有。", "want": 1, "a": "audio/c3_point.mp3"}, "bye": {"jp": "ありがとうございます。", "a": "audio/c3_bye.mp3"}}, {"av": "🧑", "who": "年轻小哥（说话快）", "g": "m", "items": [{"e": "🍜", "n": "杯面", "p": 230, "h": 0}, {"e": "🍺", "n": "啤酒", "p": 280, "h": 0}], "req": [], "bag": {"jp": "袋いらないです。", "en": "不要袋子。", "want": 0, "a": "audio/c4_bag.mp3"}, "point": {"jp": "ないっす。", "en": "没。", "want": 0, "a": "audio/c4_point.mp3"}, "bye": {"jp": "あざっす。", "a": "audio/c4_bye.mp3"}}, {"av": "👩", "who": "妈妈", "g": "f", "items": [{"e": "🍱", "n": "便当", "p": 500, "h": 1}, {"e": "🍙", "n": "饭团", "p": 150, "h": 0}, {"e": "🧃", "n": "果汁", "p": 130, "h": 0}], "req": [{"jp": "お箸3つもらえますか？", "en": "能给我三双筷子吗？", "kind": "chop", "n": 3, "a": "audio/c5_req0.mp3"}], "heat": {"jp": "温めてください。", "en": "请帮我加热。", "want": 1, "a": "audio/c5_heat.mp3"}, "bag": {"jp": "はい、お願いします。", "en": "好的，麻烦了。", "want": 1, "a": "audio/c5_bag.mp3"}, "point": {"jp": "あります。", "en": "有的。", "want": 1, "a": "audio/c5_point.mp3"}, "bye": {"jp": "ありがとうございます。", "a": "audio/c5_bye.mp3"}}, {"av": "👷", "who": "工地师傅", "g": "m", "items": [{"e": "☕", "n": "咖啡", "p": 150, "h": 0}], "req": [{"jp": "からあげ2つね。", "en": "炸鸡块两份。", "kind": "snack", "n": 2, "a": "audio/c6_req0.mp3"}], "bag": {"jp": "いいです。", "en": "不用了。（＝不要袋子）", "want": 0, "a": "audio/c6_bag.mp3"}, "point": {"jp": "ないです。", "en": "没有。", "want": 0, "a": "audio/c6_point.mp3"}, "bye": {"jp": "どうも。", "a": "audio/c6_bye.mp3"}}, {"av": "👵", "who": "老奶奶", "g": "f", "items": [{"e": "🍞", "n": "面包", "p": 180, "h": 0}, {"e": "🥛", "n": "牛奶", "p": 200, "h": 0}], "req": [], "bag": {"jp": "お願いね。", "en": "麻烦你啦。", "want": 1, "a": "audio/c7_bag.mp3"}, "point": {"jp": "あるわよ。", "en": "有的哟。", "want": 1, "a": "audio/c7_point.mp3"}, "bye": {"jp": "ありがとうね。", "a": "audio/c7_bye.mp3"}}]},HANDLE='';
+let c,ci,clock,stars,tick,lessons,au=new Audio(),actx=null;
+const $=id=>document.getElementById(id),app=$('app');
+let AQ=[],playing=false;   // 配音排队播放，互不打断
+function play(src,done,onstart){AQ.push([src,done,onstart]);if(!playing)pump()}
+function pump(){const x=AQ.shift();if(!x){playing=false;return}playing=true;let f=false;const fin=()=>{if(f)return;f=true;x[1]&&x[1]();pump()};
+x[2]&&x[2]();try{au=new Audio(x[0]);au.onended=fin;au.onerror=fin;au.play().catch(fin)}catch(e){fin()}setTimeout(fin,4000)}
+function beep(fr,d){try{actx=actx||new(window.AudioContext||window.webkitAudioContext)();const o=actx.createOscillator(),g=actx.createGain();o.frequency.value=fr;o.connect(g);g.connect(actx.destination);g.gain.value=.08;o.start();o.stop(actx.currentTime+d)}catch(e){}}
+function toast(t){const e=$('toast');e.textContent=t;e.classList.add('show');clearTimeout(e._t);e._t=setTimeout(()=>e.classList.remove('show'),1600)}
+function best(){try{return+localStorage.getItem('kb_best')||0}catch(e){return 0}}
+function start(){app.innerHTML=`<a href="../" style="font-size:14px;color:var(--sub);text-decoration:none">← 返回全部场景</a><h1>便利店<span>打工模拟</span> 🏪</h1>
+<p class="lead">今天是你在东京便利店打工的第一天。<b>顾客只说日语。</b><br>扫商品、问对问题、听懂回答，别让顾客等太久。</p>
+<div class="lg"><b>你能说的话</b><br>
+<span class="jp">いらっしゃいませ！</span> 欢迎光临！<br><span class="jp">温めますか？</span> 需要加热吗？<br><span class="jp">袋はご利用ですか？</span> 需要袋子吗？<br><span class="jp">ポイントカードはお持ちですか？</span> 有积分卡吗？<br><span class="jp">ありがとうございました！</span> 谢谢光临！</div>
+<div class="lg">⚠️ 注意：<span class="jp">大丈夫です</span>、<span class="jp">いいです</span> 一般是<b>「不用了」</b>。<br>💡 点一下对话气泡能看中文。</div>
+${best()?`<p class="lead" style="font-size:14px">最好成绩：${best()} ⭐</p>`:''}
+<button class="go" onclick="day()">开始上班 🔑</button><p class="lead" style="font-size:13px;color:var(--sub)">🔊 请打开声音 · 8 位顾客 · 约 5 分钟</p>`}
+function day(){ci=-1;clock=7*60;stars=0;lessons=[];next()}
+function hm(){return String(Math.floor(clock/60)).padStart(2,'0')+':'+String(clock%60).padStart(2,'0')}
+function next(){ci++;clearInterval(tick);AQ=[];try{au.pause()}catch(e){}if(ci>=D.cs.length)return end();clock+=25;const d=D.cs[ci];
+c={d,items:d.items.map(x=>({...x,ok:false})),snack:0,chop:0,bag:false,heated:false,heating:false,card:false,asked:{},greeted:false,pat:100,log:[],phase:'serve'};
+render();setTimeout(()=>{$('cav').classList.remove('out')},50);
+d.req.forEach((r,k)=>setTimeout(()=>{if(c.d===d&&c.phase==='serve')say(r.jp,r.en,r.a)},2600+k*3200));
+const sp=100/(48-ci*2.5)/10;tick=setInterval(()=>{if(c.phase!=='serve')return;c.pat-=sp;const p=$('pat');if(p)p.style.width=Math.max(0,c.pat)+'%';if(c.pat<=0)angry()},100)}
+function bub(side,jp,en){c.log.push({side,jp,en});c.log=c.log.slice(-3);const l=$('log');if(l)l.innerHTML=c.log.map(b=>`<div class="bub ${b.side}" onclick="this.classList.toggle('open')"><span class="jp">${b.jp}</span><small class="en">${b.en}</small></div>`).join('')}
+function say(jp,en,a){play(a,null,()=>bub('',jp,en))}
+function ask(k){if(c.phase!=='serve')return;const cl=D.clerk[k],me=()=>bub('me',cl.jp,cl.en);
+if(k==='irasshai'){c.greeted=true;play(cl.a,null,me);upd();return}
+const r=c.d[k];play(cl.a,null,me);   // 问句和回答一起排队，保证一问一答挨着
+if(!r){play(D.huh[c.d.g],()=>{c.pat-=10;toast(k==='heat'?'没有要加热的东西！':'嗯？')},()=>bub('','え？','Huh?'));return}
+c.asked[k]=1;play(r.a,()=>{if(k==='point'&&r.want)toast('💳 顾客拿出了积分卡')},()=>bub('',r.jp,r.en));upd()}
+function scan(i){if(c.phase!=='serve')return;const it=c.items[i];if(it.ok)return;it.ok=true;beep(1800,.08);upd()}
+function heat(){if(c.phase!=='serve')return;const it=c.items.find(x=>x.h&&x.ok&&!c.heated);if(!it)return toast(c.items.some(x=>x.h)?'先扫便当':'没有要加热的东西');if(c.heating)return;
+c.heating=true;upd();toast('🔥 微波炉加热中，3 秒…');setTimeout(()=>{c.heating=false;c.heated=true;beep(1200,.15);setTimeout(()=>beep(1200,.15),220);upd()},3000)}
+function bag(){if(c.phase!=='serve')return;c.bag=!c.bag;beep(600,.05);upd()}
+function chop(){if(c.phase!=='serve')return;c.chop=(c.chop+1)%5;beep(700,.04);upd()}
+function snack(){if(c.phase!=='serve')return;c.snack=(c.snack+1)%4;beep(900,.05);upd()}
+function card(){if(c.phase!=='serve')return;const p=c.d.point;if(!c.asked.point)return toast('先问：ポイントカードは…？');if(!p.want){c.pat-=5;return toast('顾客说了没有！')}c.card=true;beep(1800,.08);upd()}
+function total(){return c.items.filter(x=>x.ok).reduce((s,x)=>s+x.p,0)+c.snack*220}
+function hint(){if(ci>1)return'';const d=c.d;
+if(!c.greeted)return'👋 先打招呼：点 いらっしゃいませ';if(c.items.some(x=>!x.ok))return'📦 点商品扫码';
+if(d.heat&&!c.asked.heat)return'🍱 有便当！问 温めますか？';if(d.heat&&c.asked.heat&&d.heat.want&&!c.heated)return c.heating?'⏳ 加热中…':'🔥 顾客说要：点 加热';
+if(!c.asked.bag)return'🛍️ 问 袋はご利用ですか？';if(d.bag.want&&!c.bag)return'🛍️ 顾客要袋子：点 袋子';
+if(!c.asked.point)return'💳 问 ポイントカードは…？';if(d.point.want&&!c.card)return'💳 顾客有卡：点 积分卡';return'✅ 都好了：点 结账'}
+function render(){app.innerHTML=`<div class="hud"><span>🏪 第 1 天 · ${hm()}</span><span>👥 ${ci+1}/${D.cs.length}</span><span>⭐ ${stars}</span></div>
+<div class="scene"><div class="who">${c.d.who}</div><div class="pat"><i id="pat" style="width:100%"></i></div><div class="cav out" id="cav">${c.d.av}</div><div class="log" id="log"></div></div>
+<div class="hint" id="hint"></div><div id="main"></div>`;upd()}
+function upd(){if(c.phase!=='serve')return;const h=$('hint');if(h)h.textContent=hint();const all=c.items.every(x=>x.ok);
+const sn=c.snack?`<div class="it ok">🍗<small>炸鸡×${c.snack}</small></div>`:'';
+$('main').innerHTML=`<div class="counter"><div class="items">${c.items.map((x,i)=>`<div class="it ${x.ok?'ok':''} ${x.h&&c.heated?'hot':''}" onclick="scan(${i})">${x.e}<small>${x.ok?'¥'+x.p:x.n}</small></div>`).join('')}${sn}</div>
+<div class="stat"><span>💴 ¥${total()}</span><span class="${c.heated||c.heating?'on':''}">🔥 ${c.heating?'…':c.heated?'已加热':'—'}</span><span class="${c.bag?'on':''}">🛍️ ${c.bag?'要袋':'不要袋'}</span><span class="${c.chop?'on':''}">🥢 ×${c.chop}</span><span class="${c.card?'on':''}">💳 ${c.card?'已刷卡':'—'}</span></div></div>
+<div class="row talk">${['irasshai','heat','bag','point'].map(k=>`<button class="b" onclick="ask('${k}')"><span class="jp">${D.clerk[k].jp}</span><small>${D.clerk[k].en}</small></button>`).join('')}</div>
+<div class="row tools"><button class="b" onclick="heat()">🔥<small>加热</small></button><button class="b" onclick="bag()">🛍️<small>袋子</small></button><button class="b" onclick="chop()">🥢<small>筷子</small></button><button class="b" onclick="snack()">🍗<small>炸鸡</small></button><button class="b" onclick="card()">💳<small>积分卡</small></button></div>
+<button class="go" ${all&&!c.heating?'':'disabled'} onclick="checkout()">💴 结账</button>`}
+function q(s){return`<span class="jp">「${s}」</span>`}
+function checkout(){const d=c.d,m=[],L=x=>{if(!lessons.includes(x))lessons.push(x)};
+if(!c.greeted)m.push('忘了说 '+q('いらっしゃいませ'));
+if(d.heat){if(!c.asked.heat)m.push('没有问 '+q('温めますか？'));else if(d.heat.want&&!c.heated)m.push(`顾客说 ${q(d.heat.jp)} ＝要加热，你没加热`);else if(!d.heat.want&&c.heated){m.push(`${q(d.heat.jp)} 是「不用」，你却加热了 🔥`);L(d.heat.jp+' ＝ 不用了')}}
+if(!c.asked.bag)m.push('没有问 '+q('袋はご利用ですか？'));else if(c.bag!==!!d.bag.want){m.push(d.bag.want?`顾客要袋子：${q(d.bag.jp)}`:`${q(d.bag.jp)} ＝不要袋子，你却给了`);if(!d.bag.want)L(d.bag.jp+' ＝ 不用了')}
+if(!c.asked.point)m.push('没有问积分卡');else if(d.point.want&&!c.card)m.push(`顾客说有卡 ${q(d.point.jp)}，你没刷`);
+const rc=d.req.find(r=>r.kind==='chop'),rs=d.req.find(r=>r.kind==='snack');
+if(rc&&c.chop!==rc.n){m.push(`顾客说 ${q(rc.jp)}：要 ${rc.n} 双，你给了 ${c.chop} 双`);L(rc.jp+' = '+rc.en)}
+if(rs&&c.snack!==rs.n){m.push(`顾客说 ${q(rs.jp)}：要 ${rs.n} 份，你给了 ${c.snack} 份`);L(rs.jp+' = '+rs.en)}
+if(!rs&&c.snack)m.push('没人点炸鸡！🍗');
+let st=m.length===0?3:m.length===1?2:1;if(c.pat<25&&st>1)st--;finish(st,m)}
+function angry(){clearInterval(tick);c.phase='done';$('cav').classList.add('mad');say('もういいです。','算了。（走了）',D.huh[c.d.g]);finish(0,['等太久，顾客走了 😡'],true)}
+function finish(st,m,left){c.phase='done';c.st=st;clearInterval(tick);beep(st?1500:300,.12);$('hint').textContent='';
+$('main').innerHTML=`<div class="panel"><h3>${['😡','⭐','⭐⭐','⭐⭐⭐'][st]} ${['顾客走了','还差点','不错','完美！'][st]}</h3>${m.length?`<ul>${m.map(x=>`<li>${x}</li>`).join('')}</ul>`:'<p class="lead" style="margin-top:6px">服务很顺利，顾客很满意。</p>'}</div>
+${left?'':`<button class="b" style="width:100%;margin-top:10px;padding:12px" onclick="thanks()"><span class="jp" style="font-size:18px">ありがとうございました！</span><small>送客（额外 +1 ⭐）</small></button>`}
+<button class="go" onclick="leave()">下一位顾客 ➜</button>`}
+function thanks(){if(c.thx)return;c.thx=1;play(D.clerk.thanks.a,()=>say(c.d.bye.jp,'Bye',c.d.bye.a),()=>bub('me',D.clerk.thanks.jp,D.clerk.thanks.en));c.st++;toast('😊 很有礼貌！+1 ⭐')}
+function leave(){stars+=c.st||0;$('cav').classList.add('out');setTimeout(next,600)}
+function end(){clearInterval(tick);const max=D.cs.length*4,p=stars/max,r=p>=.85?['🏆','本月最佳店员','店长希望你每天都来上班。']:p>=.6?['👍','第一天很稳','有几个小失误，但顾客都挺喜欢你。']:p>=.35?['😅','手忙脚乱的一天','店长说：「明天再练练吧。」']:['🫠','收银台一团乱','有三位顾客投诉了。明天又是新的一天。'];
+try{if(stars>best())localStorage.setItem('kb_best',stars)}catch(e){}
+app.innerHTML=`<div class="panel" style="text-align:center;margin-top:20px"><div style="font-size:60px">${r[0]}</div><h3 style="font-size:24px">${r[1]}</h3><p class="lead" style="font-size:15px">${r[2]}</p>
+<p style="font-size:40px;font-weight:900;color:var(--brand);margin-top:8px">${stars} / ${max} ⭐</p><p class="lead" style="font-size:13px;color:var(--sub)">📸 截图记录今天的成绩</p></div>
+${lessons.length?`<div class="panel"><b>今天没听懂的话</b><ul>${lessons.map(x=>`<li class="jp">${x}</li>`).join('')}</ul></div>`:''}
+<button class="go" onclick="day()">再上一次班 🔁</button>`;scrollTo(0,0)}
+start();
+</script></body></html>

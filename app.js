@@ -87,6 +87,11 @@ function home() {
     </a>
     <div class="meter"><span style="width:${nDone / D.length * 100}%"></span></div>
     <div class="meter-t">已经走过 ${nDone} 站，还剩 ${D.length - nDone} 站</div>
+    <a class="next" href="game/" style="--c:#e8857a;margin-top:14px">
+      <span class="next-pic" style="display:flex;align-items:center;justify-content:center;font-size:34px;background:#fbe3e1">🏪</span>
+      <span class="next-txt"><small>学完来实战</small><b>便利店打工模拟</b></span>
+      <span class="next-go">${ic('right', 18)}</span>
+    </a>
   </section><div class="route">`;
   let g = '';
   D.forEach(s => {
