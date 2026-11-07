@@ -229,7 +229,7 @@ function wrongBook() {
   const x = findSt('N517');
   $app.innerHTML = `<div style="--c:#e8857a"><a class="back" href="#/">‹ 路线图</a><h2>📕 错题本</h2>
     <p style="color:var(--mute);font-size:13.5px">真题里做错的题都在这里，再做对一次就会自动移出。</p>
-    ${store.get('wrong2', []).length ? `<h3>真题库错题 ${store.get('wrong2', []).length} 题</h3>` + store.get('wrong2', []).slice(0, 120).map(q => `<div class="gm" style="margin-top:10px"><small style="color:var(--mute)">${q.lv} ${q.sess.replace('.', '年')}月 · 問題${q.m}</small><div class="jp" style="margin:4px 0">${U(q.q)}</div><div style="font-size:13.5px">正确答案：<b class="jp">${q.a + 1}. ${U(q.o[q.a])}</b></div><div style="font-size:13px;color:#5a514b;margin-top:4px">${esc(q.why)}</div></div>`).join('') : ''}
+    ${store.get('wrong2', []).length ? `<h3>真题库错题 ${store.get('wrong2', []).length} 题</h3>` + store.get('wrong2', []).slice(0, 120).map(q => `<div class="gm" style="margin-top:10px"><small style="color:var(--mute)">${q.lv} ${sessName(q.sess)} · 問題${q.m}</small><div class="jp" style="margin:4px 0">${U(q.q)}</div><div style="font-size:13.5px">正确答案：<b class="jp">${q.a + 1}. ${U(q.o[q.a])}</b></div><div style="font-size:13px;color:#5a514b;margin-top:4px">${esc(q.why)}</div></div>`).join('') : ''}
     ${Q.length ? `<h3>N5 毕业考错题</h3><button class="btn go" id="rw">把 ${Q.length} 道错题再做一遍</button>` + Q.map(q => `<div class="gm" style="margin-top:10px"><small style="color:var(--mute)">${esc(q.part)} · ${esc(q.id.split('|')[0])}</small><div class="jp" style="margin:4px 0">${U(q.q)}</div><div style="font-size:13.5px">正确答案：<b class="jp">${U(q.o[q.a])}</b></div><div style="font-size:13px;color:#5a514b;margin-top:4px">${esc(q.why)}</div></div>`).join('')
       : store.get('wrong2', []).length ? '' : '<div class="card" style="text-align:center;margin-top:14px">还没有错题 👍</div>'}</div>`;
   const b = document.getElementById('rw'); if (b) b.onclick = () => exam(x, EXAM_N5, Q, true);
@@ -243,15 +243,15 @@ function bankList(lv) {
     <p style="color:var(--mute);font-size:13.5px">历年 JLPT 真题，答案逐题对照标准答案，每题都有中文解析。共 ${B.length} 套、${B.reduce((a, b) => a + b[2], 0)} 题。</p>
     <div class="bk-tabs">${lvs.map(x => `<a href="#/bank/${x}" class="${x === lv ? 'on' : ''}" style="--c:${LVC[x]}">${x}<small>${B.filter(b => b[0] === x).length} 套</small></a>`).join('')}</div>
     <div class="bk-grid">${B.filter(b => b[0] === lv).sort((a, b) => b[1].localeCompare(a[1])).map(([l, ss, n]) => { const d = done[l + '_' + ss];
-      return `<a class="bk-card" href="#/exam/${l}_${ss}"><small>${l} · ${n} 题</small><b>${ss.replace('.', '年')}月</b>${d ? `<em>上次 ${d.r}/${d.n}</em>` : '<em class="new">未做</em>'}</a>`; }).join('')}</div></div>`;
+      return `<a class="bk-card" href="#/exam/${l}_${ss}"><small>${l} · ${n} 题</small><b>${sessName(ss)}</b>${d ? `<em>上次 ${d.r}/${d.n}</em>` : '<em class="new">未做</em>'}</a>`; }).join('')}</div></div>`;
 }
 async function bankLoad(id) { try { const r = await fetch('bank/' + id + '.json'); return await r.json(); } catch (e) { toast('加载失败，检查一下网络'); return null; } }
 async function bankIntro(id) {
   const d = await bankLoad(id); if (!d) return; const c = LVC[d.lv];
   const ms = [...new Set(d.qs.map(q => q.m))];
   $app.innerHTML = `<div style="--c:${c}"><a class="back" href="#/bank/${d.lv}">‹ 真题库</a>
-    <div class="card ex-intro"><div style="font-size:40px">📖</div><h2>${d.sess.replace('.', '年')}月 JLPT ${d.lv}</h2>
-    <p>整套 ${d.qs.length} 题 · 文字词汇 / 文法 / 读解</p><div class="ex-box">${ms.map(m => `<span>問題${m}　${esc(d.mondai[m] || '')}　${d.qs.filter(q => q.m === m).length} 题</span>`).join('')}</div></div>
+    <div class="card ex-intro"><div style="font-size:40px">📖</div><h2>${sessName(d.sess)} JLPT ${d.lv}</h2>
+    <p>整套 ${d.qs.length} 题 · 文字词汇 / 文法 / 读解</p><div class="ex-box">${ms.map(m => `<span>${/N[345]/.test(d.lv) ? (m > 10 ? '文法・読解 ' : '文字・語彙 ') : ''}問題${/N[345]/.test(d.lv) && m > 10 ? m - 10 : m}　${esc(d.mondai[m] || '')}　${d.qs.filter(q => q.m === m).length} 题</span>`).join('')}</div></div>
     <button class="bk-mode" id="m1"><em>严格模式</em><b>模拟真实考试</b><span>全卷计时、统一交卷，做的时候不看答案，交卷后看成绩和每题解析。</span></button>
     <button class="bk-mode g" id="m2"><em>学习模式</em><b>边做题，边看解析</b><span>不计时，每做完一题马上看正确答案、为什么选、四个选项逐项解析。</span></button></div>`;
   document.getElementById('m1').onclick = () => bankRun(d, true);
@@ -259,7 +259,7 @@ async function bankIntro(id) {
 }
 function bankRun(d, strict) {
   const c = LVC[d.lv], Q = d.qs, ans = {}, t0 = Date.now(); let i = 0, tick;
-  const head = q => `問題${q.m}　${esc(d.mondai[q.m] || '')}`;
+  const mn = m => (/N[345]/.test(d.lv) && m > 10 ? m - 10 : m), head = q => `問題${mn(q.m)}　${esc(d.mondai[q.m] || '')}`;
   const optsHtml = (q, show, pick) => q.o.map((o, j) => `<button class="opt r jp${show && j === q.a ? ' ok' : ''}${show && pick === j && j !== q.a ? ' no' : ''}${!show && pick === j ? ' sel' : ''}" data-j="${j}"><em>${j + 1}</em>${U(o)}</button>`).join('');
   const whyHtml = (q, pick) => `<div class="ex-why ${pick === q.a ? 'g' : 'b'}"><b>${pick === undefined ? '正确答案是 ' + (q.a + 1) : pick === q.a ? '⭕ 答对了' : '❌ 正确答案是 ' + (q.a + 1)}</b><p>${esc(q.why)}</p>
     ${q.ow.length === 4 ? `<div class="ow">${q.ow.map((w, j) => `<div class="${j === q.a ? 'ok' : ''}"><em>${j + 1}</em>${esc(w)}</div>`).join('')}</div>` : ''}</div>`;
@@ -269,10 +269,10 @@ function bankRun(d, strict) {
     if (i >= Q.length) return finish();
     const q = Q[i], ps = q.p && d.ps[q.p];
     $app.innerHTML = `<div style="--c:${c}"><a class="back" href="#/exam/${d.lv}_${d.sess}">‹ 退出</a>
-      <div class="qtop"><span>${d.lv} ${d.sess.replace('.', '年')}月 · ${strict ? '严格模式' : '学习模式'}</span><span>${strict ? `<b id="tm">00:00</b>　` : ''}${i + 1} / ${Q.length}</span></div>
+      <div class="qtop"><span>${d.lv} ${sessName(d.sess)} · ${strict ? '严格模式' : '学习模式'}</span><span>${strict ? `<b id="tm">00:00</b>　` : ''}${i + 1} / ${Q.length}</span></div>
       <div class="bar"><i style="width:${i / Q.length * 100}%"></i></div>
       <div class="ex-h jp">${head(q)}</div>${ps ? `<details class="ex-ps" ${q.p !== (Q[i - 1] || {}).p ? 'open' : ''}><summary>阅读文章</summary><div class="jp">${U(ps)}</div></details>` : ''}
-      <div class="ex-q jp"><small>${q.n}.</small> ${U(q.q)}</div><div class="ex-o">${optsHtml(q, false, ans[q.n])}</div><div id="why"></div>
+      <div class="ex-q jp"><small>${q.d || q.n}.</small> ${U(q.q)}</div><div class="ex-o">${optsHtml(q, false, ans[q.n])}</div><div id="why"></div>
       ${strict ? `<div class="bk-nav"><button class="btn" id="pv" ${i ? '' : 'disabled'}>‹ 上一题</button><button class="btn go" id="nx">${i + 1 < Q.length ? '下一题 ›' : '交卷'}</button></div>` : ''}</div>`;
     if (strict) { document.getElementById('pv').onclick = () => { i--; draw(); }; document.getElementById('nx').onclick = () => { if (i + 1 >= Q.length && Object.keys(ans).length < Q.length && !confirm2()) return; i++; draw(); scrollTo(0, 0); }; }
     $app.querySelectorAll('.opt').forEach(b => b.onclick = () => { const j = +b.dataset.j;
@@ -288,7 +288,7 @@ function bankRun(d, strict) {
     if (strict) Q.forEach(q => record(q, ans[q.n]));
     const ms = [...new Set(Q.map(q => q.m))], min = (Date.now() - t0) / 60000 | 0;
     $app.innerHTML = `<div style="--c:${c}"><a class="back" href="#/bank/${d.lv}">‹ 真题库</a><div class="card ex-intro"><div style="font-size:44px">${r / Q.length >= .6 ? '🎉' : '💪'}</div>
-      <h2>${r} / ${Q.length}（${Math.round(r / Q.length * 100)}%）</h2><p>${d.sess.replace('.', '年')}月 ${d.lv}${strict ? ` · 用时 ${min} 分钟` : ''}</p>
+      <h2>${r} / ${Q.length}（${Math.round(r / Q.length * 100)}%）</h2><p>${sessName(d.sess)} ${d.lv}${strict ? ` · 用时 ${min} 分钟` : ''}</p>
       <div class="ex-box">${ms.map(m => { const qs = Q.filter(q => q.m === m), ok = qs.filter(q => ans[q.n] === q.a).length; return `<span>問題${m} ${esc(d.mondai[m] || '')}　${ok}/${qs.length}</span>`; }).join('')}</div></div>
       ${strict ? `<h3>逐题解析</h3>` + Q.map(q => `<div class="gm"><div class="jp" style="font-weight:700">${q.n}. ${U(q.q)}</div><div style="font-size:13px;color:var(--mute);margin:4px 0">你选：${ans[q.n] === undefined ? '没做' : ans[q.n] + 1}</div>${whyHtml(q, ans[q.n])}${kNodes(q)}${markBar(d, q)}</div>`).join('') : ''}
       <a class="btn go" href="#/wrong">📕 错题本</a><a class="btn" href="#/bank/${d.lv}">回到真题库</a></div>`; bindMarks($app, d); scrollTo(0, 0); };
@@ -297,7 +297,7 @@ function bankRun(d, strict) {
 // ---------- 单词星系：每个词连到真题原句 ----------
 const say = t => { try { const u = new SpeechSynthesisUtterance(t); u.lang = 'ja-JP'; u.rate = .9; speechSynthesis.cancel(); speechSynthesis.speak(u); } catch (e) {} };
 const known = () => new Set(store.get('known', []));
-const sessName = s => s.replace('.', '年') + '月';
+const sessName = s => s.includes('.') ? s.replace('.', '年') + '月' : s + '年';
 function wordList(lv, sort, kw, page) {
   const W = window.WORDS || [], K = known(); lv = lv || '全部'; sort = sort || 'cnt';
   let L = W.filter(r => (lv === '全部' || r[3] === lv) && (!kw || r[0].includes(kw) || r[1].includes(kw) || r[2].includes(kw)));
