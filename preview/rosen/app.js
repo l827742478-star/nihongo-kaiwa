@@ -23,6 +23,7 @@ const NG = () => tone([[300, .2, .08, 'triangle']]);
 const LINES = [...KANA.map(l => ({...l, level: '五十音'})),
   ...TOKYO.L.map(l => l.code === 'G' && window.N5 ? {...l, st: N5.st} :
     ({...l, off: true, st: l.st.map((n, i) => ({no: l.code + String(i + 1).padStart(2, '0'), name: n, theme: i === l.st.length - 1 ? l.level + ' 毕业考' : ''}))}))];
+const RB = t => esc(t).replace(/\{([^|{}]+)\|([^{}]+)\}/g, '<ruby>$1<rt>$2</rt></ruby>');
 const mark = s => s.kana ? s.kana[0][0].slice(0, 2) : s.name[0];
 const yomi = n => (TOKYO.S[n] || [])[2] || '';
 const stars = () => store.get('stars', {});
@@ -77,12 +78,23 @@ function station(no) {
     <div class="sign"><span class="num">${l.code}<em>${s.no.slice(-2)}</em></span><small class="yomi">${esc(yomi(s.name))}</small><b>${esc(s.name)}</b><small>${esc(l.name)} · 这一站学 <em class="theme">${esc(s.theme)}</em></small>
       <div class="band">${prev ? `<a href="#/s/${prev.no}">‹ ${esc(prev.name)}</a>` : '<span></span>'}${nx ? `<a href="#/s/${nx.no}">${esc(nx.name)} ›</a>` : '<span>终点站</span>'}</div></div>
     <div class="ann"><button id="annb">🔊</button><div><div class="jp">${esc(s.ann)}</div><small>车内广播：下一站，${esc(s.name)}（${esc(s.theme)}）</small></div></div>`;
-  if (s.exam) { $app.innerHTML = head + `<div class="card" style="text-align:center;padding:30px 18px"><div style="font-size:44px">🎓</div><h2>${esc(l.level)} 毕业考</h2>
-      <p style="color:var(--mute);font-size:14px;line-height:1.7">用一整套真题来考：文字词汇、文法、读解、听力。<br>考过就能换乘下一条线。</p><p style="margin-top:12px;font-weight:800;color:var(--c)">真题题库正在接入</p></div></div>`;
-    document.getElementById('annb').onclick = () => play(s.aa); return; }
+  if (s.exam) { const E = l.code === 'G' && window.EXAM_N5, Q = E ? examQs(E) : [], best = store.get('exam_' + s.no, null);
+    $app.innerHTML = head + `<div class="card ex-intro"><div style="font-size:44px">🎓</div><h2>${esc(l.level)} 毕业考</h2>
+      <p>用一整套真题来考，考过就能换乘下一条线。</p>
+      ${E ? `<div class="ex-box"><b>${esc(E.title)}</b>${E.parts.map(pt => `<span>${esc(pt.name)} ${examQs({parts: [pt]}).length} 题</span>`).join('')}<span>及格线：60%</span></div>
+        ${best ? `<p class="ex-best">上次成绩：${best.r} / ${best.n}（${Math.round(best.r / best.n * 100)}%）</p>` : ''}
+        <button class="btn go" id="ex">📝 开始考试 · ${Q.length} 题</button>` : '<p style="font-weight:800;color:var(--c)">真题题库正在接入</p>'}</div>
+      ${store.get('wrong', []).length ? `<a class="btn" href="#/wrong">📕 错题本 ${store.get('wrong', []).length} 题</a>` : ''}</div>`;
+    document.getElementById('annb').onclick = () => play(s.aa);
+    const b = document.getElementById('ex'); if (b) b.onclick = () => exam(x, E, Q); return; }
   if (s.words && !s.kana) { const hit = s.words.filter(w => w[3]).length;
     $app.innerHTML = head + `<h3>这一站的单词 <small style="font-size:12px;color:var(--mute);font-weight:600">${s.words.length} 个，${hit} 个在真题里出现过</small></h3>
-      ${s.words.map(([w, rd, zh, n, a]) => `<button class="vw" data-a="${a}"><span class="pl">▶</span><span class="vw-w"><b class="jp">${esc(w)}</b>${rd ? `<small>${esc(rd)}</small>` : ''}</span><span class="vw-zh">${esc(zh)}</span>${n ? `<em class="hot${n >= 8 ? ' h' : ''}">真题 ${n} 场</em>` : ''}</button>`).join('')}
+      ${s.words.map(([w, rd, zh, n, a, ex, exzh, ea]) => `<div class="vw"><button class="pl" data-a="${a}">▶</button><span class="vw-w"><b class="jp">${esc(w)}</b>${rd ? `<small>${esc(rd)}</small>` : ''}</span><span class="vw-zh">${esc(zh)}</span>${n ? `<em class="hot${n >= 8 ? ' h' : ''}">真题 ${n} 场</em>` : ''}
+        ${ex ? `<button class="vw-ex" data-a="${ea}"><span class="jp">${RB(ex)}</span><small>${esc(exzh)}</small></button>` : ''}</div>`).join('')}
+      ${s.gram && s.gram.length ? `<h3>这一站的文法 <small style="font-size:12px;color:var(--mute);font-weight:600">${s.gram.length} 个</small></h3>
+      ${s.gram.map(([g, how, mean, ex, exzh, n, a]) => `<div class="gm"><div class="gm-h"><b class="jp">${esc(g)}</b>${n ? `<em class="hot${n >= 8 ? ' h' : ''}">真题 ${n} 场</em>` : ''}</div>
+        <div class="gm-m">${esc(mean)}</div><div class="gm-how"><span>接续</span>${esc(how)}</div>
+        <button class="gm-ex" data-a="${a}"><span class="pl">▶</span><span><span class="jp">${RB(ex)}</span><small>${esc(exzh)}</small></span></button></div>`).join('')}` : ''}
       <button class="btn go" id="go">🚃 出发 · 过关小测</button></div>`;
     document.getElementById('annb').onclick = () => play(s.aa); setTimeout(() => play(s.aa), 300);
     $app.querySelectorAll('[data-a]').forEach(b => b.onclick = () => play(b.dataset.a));
@@ -133,8 +145,13 @@ function quiz({l, s}) {
 function vquiz({l, s}) {
   const W = s.words, pick = a => a[Math.random() * a.length | 0];
   const pool = [...W].sort((a, b) => b[3] - a[3] + (Math.random() - .5) * 6).slice(0, 10);
-  const Q = pool.map((t, n) => { const mode = ['hear', 'mean', 'pick'][n % 3], o = new Set([t]);
+  const Q = pool.slice(0, s.gram && s.gram.length ? 8 : 10).map((t, n) => { const mode = ['hear', 'mean', 'pick'][n % 3], o = new Set([t]);
     while (o.size < Math.min(4, W.length)) o.add(pick(W)); return {t, mode, opts: [...o].sort(() => Math.random() - .5)}; });
+  const G = s.gram || [], allG = l.st.flatMap(x => x.gram || []);
+  [...G].sort(() => Math.random() - .5).slice(0, 2).forEach(g => { const o = new Set([g]); while (o.size < 4) o.add(pick(allG));
+    Q.push({t: [g[0], '', g[2], 0, g[6]], g, mode: 'gram', opts: [...o].map(x => [x[0], '', x[2], 0, x[6]]).sort(() => Math.random() - .5)}); });
+  Q.forEach(q => { if (q.mode === 'gram') q.t = q.opts.find(o => o[0] === q.g[0]); });
+  Q.sort(() => Math.random() - .5);
   let i = 0, right = 0;
   const draw = () => {
     if (i >= Q.length) return arrive(l, s, right);
@@ -143,6 +160,7 @@ function vquiz({l, s}) {
       <div class="qtop"><span>${l.code}${s.no.slice(-2)} ${esc(s.name)} · 过关小测</span><span>${i + 1} / ${Q.length}</span></div><div class="bar"><i style="width:${i / Q.length * 100}%"></i></div>
       <div class="qbox">${q.mode === 'hear' ? `<button class="spk" id="spk">🔊</button><small>听一听，是什么意思？</small>`
         : q.mode === 'mean' ? `<div class="kana" style="font-size:42px">${esc(q.t[0])}</div>${q.t[1] ? `<small>${esc(q.t[1])}</small>` : ''}<small>是什么意思？</small>`
+        : q.mode === 'gram' ? `<div class="jp" style="font-size:19px;font-weight:700;line-height:2">${RB(q.g[3])}</div><small>${esc(q.g[4])}</small><small>句子里的「${esc(q.g[0])}」是什么意思？</small>`
         : `<div style="font-size:26px;font-weight:900">${esc(q.t[2])}</div><small>日语怎么说？</small>`}</div>
       <div class="opts">${q.opts.map((o, j) => `<button class="opt r${q.mode === 'pick' ? ' jp' : ''}" style="font-size:${q.mode === 'pick' ? 21 : 16}px" data-j="${j}">${lab(o)}</button>`).join('')}</div></div>`;
     const sp = document.getElementById('spk'); if (sp) { sp.onclick = () => play(q.t[4]); setTimeout(() => play(q.t[4]), 250); }
@@ -155,6 +173,60 @@ function vquiz({l, s}) {
     });
   };
   draw();
+}
+// ---------- 毕业考：一整套真题，每题看解析，错题进错题本 ----------
+function examQs(E) {
+  const Q = [];
+  E.parts.forEach(pt => pt.secs.forEach(sec => {
+    [[sec.passage, sec.items], [sec.passage2, sec.items2]].forEach(([ps, its]) => (its || []).forEach(it => Q.push({...it, part: pt.name, h: sec.h, ps, table: sec.table, id: E.id + '|' + Q.length}))); }));
+  return Q;
+}
+const U = t => RB(t).replace(/\[u\]/g, '<u>').replace(/\[\/u\]/g, '</u>').replace(/\n/g, '<br>');
+function exam({l, s}, E, Q, only) {
+  let i = 0, right = 0; const W = new Set(store.get('wrong', []).map(w => w.id));
+  const draw = () => {
+    if (i >= Q.length) return only ? wrongBook() : examEnd(l, s, E, right, Q.length);
+    const q = Q[i];
+    $app.innerHTML = `<div style="--c:${l.color}"><a class="back" href="${only ? '#/wrong' : '#/s/' + s.no}">‹ ${only ? '错题本' : '退出考试'}</a>
+      <div class="qtop"><span>${esc(q.part)}</span><span>${i + 1} / ${Q.length}</span></div><div class="bar"><i style="width:${i / Q.length * 100}%"></i></div>
+      <div class="ex-h jp">${U(q.h)}</div>
+      ${q.ps ? `<details class="ex-ps" open><summary>阅读文章</summary><div class="jp">${U(q.ps)}</div></details>` : ''}
+      ${q.table ? `<div class="ex-tb jp"><b>${U(q.table.title)}</b>${q.table.rows.map(r => `<div>${r.map(c => `<span>${U(c)}</span>`).join('')}</div>`).join('')}</div>` : ''}
+      <div class="ex-q jp">${U(q.q)}</div>
+      <div class="ex-o">${q.o.map((o, j) => `<button class="opt r jp" data-j="${j}"><em>${j + 1}</em>${U(o)}</button>`).join('')}</div><div id="why"></div></div>`;
+    $app.querySelectorAll('.opt').forEach(b => b.onclick = () => {
+      if ($app.querySelector('.opt.ok')) return;
+      const j = +b.dataset.j, good = j === q.a;
+      $app.querySelectorAll('.opt')[q.a].classList.add('ok'); if (!good) b.classList.add('no');
+      if (good) { right++; OK(); } else { NG(); }
+      let wr = store.get('wrong', []); wr = wr.filter(w => w.id !== q.id); if (!good) wr.unshift({id: q.id, st: s.no}); store.set('wrong', wr.slice(0, 500));
+      document.getElementById('why').innerHTML = `<div class="ex-why ${good ? 'g' : 'b'}"><b>${good ? '⭕ 答对了' : '❌ 正确答案是 ' + (q.a + 1)}</b><p>${esc(q.why)}</p></div>
+        <button class="btn go" id="nx">${i + 1 < Q.length ? '下一题 ›' : '看成绩'}</button>`;
+      document.getElementById('nx').onclick = () => { i++; draw(); scrollTo(0, 0); };
+    });
+  };
+  draw();
+}
+function examEnd(l, s, E, r, n) {
+  const pct = Math.round(r / n * 100), pass = pct >= 60, S = stars(), st = pct >= 90 ? 3 : pct >= 75 ? 2 : pass ? 1 : 0;
+  store.set('exam_' + s.no, {r, n});
+  if (st > (S[s.no] || 0)) { S[s.no] = st; store.set('stars', S); }
+  const nl = LINES[LINES.indexOf(l) + 1];
+  $app.innerHTML = `<div class="arrive" style="--c:${l.color}">${pass ? `<div class="stamp new"><span class="kana">合格</span><b>${esc(s.name)}駅</b><small>${esc(l.level)} 毕业 · ${new Date().getMonth() + 1}.${new Date().getDate()}</small></div>` : '<div style="font-size:60px;margin-top:20px">💪</div>'}
+    <h2>${pass ? `${esc(l.level)} 毕业了！` : '还差一点'}</h2><div class="stars">${[1, 2, 3].map(k => `<i class="${k <= st ? 'on' : ''}">★</i>`).join('')}</div>
+    <p style="color:var(--mute);font-size:14px">${esc(E.title)}：答对 ${r} / ${n}（${pct}%）　及格线 60%</p>
+    ${pass && nl ? `<a class="btn go" href="#/">🔁 换乘：${esc(nl.name)} · ${esc(nl.level)}</a>` : ''}
+    <a class="btn" href="#/wrong">📕 看错题本</a><a class="btn" href="#/s/${s.no}">再考一次</a><a class="btn" href="#/">回到路线图</a></div>`;
+  pass ? BELL() : NG(); scrollTo(0, 0);
+}
+function wrongBook() {
+  const all = window.EXAM_N5 ? examQs(EXAM_N5) : [], wr = store.get('wrong', []), Q = wr.map(w => all.find(q => q.id === w.id)).filter(Boolean);
+  const x = findSt('G19');
+  $app.innerHTML = `<div style="--c:#e8857a"><a class="back" href="#/">‹ 路线图</a><h2>📕 错题本</h2>
+    <p style="color:var(--mute);font-size:13.5px">真题里做错的题都在这里，再做对一次就会自动移出。</p>
+    ${Q.length ? `<button class="btn go" id="rw">把 ${Q.length} 道错题再做一遍</button>` + Q.map(q => `<div class="gm" style="margin-top:10px"><small style="color:var(--mute)">${esc(q.part)} · ${esc(q.id.split('|')[0])}</small><div class="jp" style="margin:4px 0">${U(q.q)}</div><div style="font-size:13.5px">正确答案：<b class="jp">${U(q.o[q.a])}</b></div><div style="font-size:13px;color:#5a514b;margin-top:4px">${esc(q.why)}</div></div>`).join('')
+      : '<div class="card" style="text-align:center;margin-top:14px">还没有错题 👍</div>'}</div>`;
+  const b = document.getElementById('rw'); if (b) b.onclick = () => exam(x, EXAM_N5, Q, true);
 }
 function arrive(l, s, right) {
   const st = right >= 10 ? 3 : right >= 9 ? 2 : right >= 8 ? 1 : 0, S = stars(), first = !S[s.no] && st;
@@ -178,7 +250,7 @@ function stampBook() {
 }
 function go() {
   au.pause(); const m = location.hash.match(/^#\/s\/(\w+)/);
-  if (m) station(m[1]); else if (location.hash === '#/stamps') stampBook(); else home();
+  if (m) station(m[1]); else if (location.hash === '#/stamps') stampBook(); else if (location.hash === '#/wrong') wrongBook(); else home();
   scrollTo(0, 0);
 }
 addEventListener('hashchange', go); go();
