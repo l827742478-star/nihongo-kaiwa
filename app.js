@@ -12,6 +12,41 @@ const setFuri = on => { store.set('furi', on); document.body.classList.toggle('n
 setFuri(store.get('furi', true));
 const furiBtn = () => `<button class="furi${store.get('furi', true) ? ' on' : ''}" id="furi">あ 假名</button>`;
 const bindFuri = () => { const b = document.getElementById('furi'); if (b) b.onclick = () => { setFuri(!store.get('furi', true)); b.classList.toggle('on'); }; };
+// 点词看讲解：会话「这段要注意」里的说法 + 本站词汇，句子里出现就标下划线
+function kwList(sc, d) {
+  if (d.kw) return d.kw;
+  const K = [];
+  d.notes.forEach(n => { const m = n.match(/^「([^」]+)」[：:]?\s*(.*)$/); if (!m) return;
+    const p = m[1].split(/[〜～…]/).filter(Boolean).sort((a, b) => b.length - a.length)[0];
+    if (p && p.length >= 2) K.push({p, t: m[1], x: m[2]}); });
+  sc.vocab.forEach(v => { if (v.w.length >= 2 && !/[〜～]/.test(v.w)) K.push({p: v.w, t: v.w, kana: v.kana, x: v.zh, a: v.a1}); });
+  return d.kw = K;
+}
+function RK(o, K) {
+  if (!K || !K.length) return R(o, 'ja');
+  const U = [], src = o.jaR || o.ja, re = /\{([^|{}]+)\|([^{}]+)\}|([\s\S])/g; let m;
+  while ((m = re.exec(src))) U.push(m[1] ? {s: m[1], h: `<ruby>${esc(m[1])}<rt>${esc(m[2])}</rt></ruby>`} : {s: m[3], h: esc(m[3])});
+  const plain = U.map(u => u.s).join(''), tag = new Array(plain.length).fill(-1);
+  K.forEach((k, i) => { let j = plain.indexOf(k.p);
+    while (j >= 0) { if (tag.slice(j, j + k.p.length).every(x => x < 0)) tag.fill(i, j, j + k.p.length); j = plain.indexOf(k.p, j + k.p.length); } });
+  let out = '', pos = 0, cur = -1;
+  U.forEach(u => { const t = tag[pos]; pos += u.s.length;
+    if (t !== cur) { if (cur >= 0) out += '</u>'; if (t >= 0) out += `<u class="kw${K[t].a ? ' w' : ''}" data-k="${t}">`; cur = t; }
+    out += u.h; });
+  return out + (cur >= 0 ? '</u>' : '');
+}
+function bindKw(root, K) {
+  root.querySelectorAll('.kw[data-k]').forEach(u => u.onclick = e => { e.stopPropagation(); e.preventDefault(); showKw(K[+u.dataset.k]); });
+}
+function showKw(k) {
+  let p = document.getElementById('pop');
+  if (!p) { p = document.createElement('div'); p.id = 'pop'; document.body.appendChild(p); p.onclick = e => { if (e.target === p) p.classList.remove('on'); }; }
+  p.innerHTML = `<div class="pop-in"><div class="pop-h">${k.a ? pl(k.a) : ''}<b>${esc(k.t)}</b>${k.kana ? `<small>${esc(k.kana)}</small>` : ''}<span class="pop-x" role="button">×</span></div>
+    <p>${esc(k.x)}</p><small class="pop-f">${k.a ? '场景词汇' : '这段要注意'}</small></div>`;
+  p.querySelector('.pop-x').onclick = () => p.classList.remove('on');
+  p.querySelectorAll('[data-a]').forEach(b => b.onclick = () => play(b.dataset.a));
+  requestAnimationFrame(() => p.classList.add('on'));
+}
 // 收藏：key = 站|类型|序号
 const favs = () => store.get('fav', []);
 const isFav = k => favs().includes(k);
@@ -165,7 +200,7 @@ function scene(sc, tab, di) {
 // ---------- 会话：精听 / 跟读 / 听写 ----------
 let mode = 'listen';
 function dialogue(B, sc, di, fk) {
-  const d = sc.dialogues[di]; d.fk = fk;
+  const d = sc.dialogues[di]; d.fk = fk; if (sc.vocab) kwList(sc, d);
   d.pic = d.pic || (() => `img/${sc.no}-${di + 1}.jpg`);
   B.innerHTML = `<div class="stage" id="stage">
       <img id="pic" src="${d.pic(0)}" alt="${esc(d.title)}" onerror="this.style.visibility='hidden'" onload="this.style.visibility=''">
@@ -209,7 +244,8 @@ function listenMode(M, d) {
       ${rateSeg()}</div>
     <div class="views">${[['both', '日语+中文'], ['ja', '只看日语'], ['zh', '只看中文'], ['none', '盲听']].map(([k, n]) => `<button class="${view === k ? 'on' : ''}" data-v="${k}">${n}</button>`).join('')}</div>
     <div class="chat ${view === 'zh' || view === 'none' ? 'hideja' : ''} ${view === 'ja' || view === 'none' ? 'hidezh' : ''}">
-    ${d.lines.map((l, i) => `<button class="ln${l.who === d.lines[0].who ? '' : ' r'}" data-i="${i}"><span class="who">${esc(l.who)}</span><span class="bub"><span class="ja">${R(l, 'ja')}</span><span class="zh">${esc(l.zh)}</span></span>${d.fk ? star(d.fk + '|' + i) : ''}</button>`).join('')}</div>
+    ${d.lines.map((l, i) => `<button class="ln${l.who === d.lines[0].who ? '' : ' r'}" data-i="${i}"><span class="who">${esc(l.who)}</span><span class="bub"><span class="ja">${RK(l, d.kw)}</span><span class="zh">${esc(l.zh)}</span></span>${d.fk ? star(d.fk + '|' + i) : ''}</button>`).join('')}</div>
+    ${d.kw && d.kw.length ? '<p class="kw-tip">句子里<u class="kw">带下划线</u>的词，点一下看讲解</p>' : ''}
     ${d.notes.length ? `<div class="notes"><h3>这段要注意</h3><ul>${d.notes.map(n => `<li>${esc(n)}</li>`).join('')}</ul></div>` : ''}`;
     const lns = M.querySelectorAll('.ln');
     const mark = i => { lns.forEach((x, j) => x.classList.toggle('cur', j === i)); sub(d, i, view === 'none'); };
@@ -219,7 +255,7 @@ function listenMode(M, d) {
     M.querySelector('#all').onclick = () => { document.getElementById('stage').scrollIntoView({behavior: 'smooth', block: 'start'}); all(0); };
     M.querySelector('#loop').onclick = () => { loop1 = !loop1; draw(); };
     M.querySelectorAll('[data-v]').forEach(b => b.onclick = () => { view = b.dataset.v; draw(); });
-    bindStar(M);
+    bindStar(M); bindKw(M, d.kw);
     bindRate(M, draw);
   };
   draw();
@@ -288,7 +324,7 @@ function drill(M, d, dict) {
       <div class="steps">${d.lines.map((_, j) => `<i class="${j === i ? 'on' : j < i ? 'past' : ''}"></i>`).join('')}</div>
       <div class="who-tag">${esc(l.who)}${d.fk ? star(d.fk + '|' + i) : l.fk ? star(l.fk) : ''}</div>
       ${dict ? `<textarea id="ta" rows="3" placeholder="听完把这句写下来，汉字、假名都可以"></textarea><div id="res"></div>`
-             : `<div class="line"><div class="ja">${R(l, 'ja')}</div><div class="zh">${esc(l.zh)}</div></div>`}
+             : `<div class="line"><div class="ja">${RK(l, d.kw)}</div><div class="zh">${esc(l.zh)}</div></div>`}
       <div class="pad">${dict
         ? `<button class="key" id="slow"><span>${ic('slow')}</span>慢放</button>
            <button class="key big blue" id="o"><span>${ic('play', 28)}</span>播放</button>
@@ -303,7 +339,7 @@ function drill(M, d, dict) {
     </div>
     <div class="pager"><button class="btn" id="prev" ${i ? '' : 'disabled'}>${ic('left', 16)}上一句</button><button class="btn dark" id="next">${i < d.lines.length - 1 ? '下一句' + ic('right', 16) : '从第一句再来'}</button></div>`;
     const $ = s => M.querySelector(s);
-    bindStar(M);
+    bindStar(M); bindKw(M, d.kw);
     $('#o').onclick = () => play(l.a);
     $('#prev').onclick = () => { i--; draw(); };
     $('#next').onclick = () => { i = (i + 1) % d.lines.length; draw(); if (dict) setTimeout(() => play(d.lines[i].a), 200); };

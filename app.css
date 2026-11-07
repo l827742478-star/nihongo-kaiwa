@@ -225,7 +225,7 @@ body.aload::after{content:'音频加载中…';position:fixed;left:50%;bottom:ca
 @keyframes aload{from{opacity:0}}
 
 /* 假名注音 */
-ruby{ruby-position:over}
+ruby{ruby-position:over;ruby-align:center}
 rt{font-size:.5em;font-weight:500;color:var(--mute);letter-spacing:0}
 body.nofuri rt{display:none}
 .sh{position:relative}
@@ -259,3 +259,18 @@ body.nofuri rt{display:none}
 .cal-w i{font-style:normal;width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;background:var(--sky);color:var(--mute)}
 .cal-w .ok i{background:#7fb27a;color:#fff}
 .cal-w .today i{box-shadow:0 0 0 2px var(--navy)}
+/* 点词讲解 */
+u.kw{text-decoration:none;border-bottom:2px dotted #e8857a;cursor:pointer}
+u.kw.w{border-bottom-color:#6ea9c8}
+.kw-tip{font-size:12.5px;color:var(--mute);margin:12px 2px 0}
+.kw-tip u.kw{color:var(--navy)}
+#pop{position:fixed;inset:0;z-index:50;background:rgba(40,30,20,.0);pointer-events:none;transition:background .2s}
+#pop.on{background:rgba(40,30,20,.28);pointer-events:auto}
+#pop .pop-in{position:absolute;left:0;right:0;bottom:0;max-width:520px;margin:0 auto;background:var(--paper);border-radius:22px 22px 0 0;padding:18px 20px 30px;box-shadow:0 -8px 30px rgba(60,40,20,.18);transform:translateY(105%);transition:transform .22s}
+#pop.on .pop-in{transform:none}
+.pop-h{display:flex;align-items:center;gap:10px}
+.pop-h b{font-size:20px;font-weight:900}
+.pop-h small{font-size:13px;color:var(--mute)}
+.pop-x{margin-left:auto;font-size:26px;line-height:1;color:var(--mute);cursor:pointer;padding:0 4px}
+#pop p{font-size:15.5px;line-height:1.7;margin:10px 0 6px}
+.pop-f{font-size:11.5px;color:var(--mute)}
