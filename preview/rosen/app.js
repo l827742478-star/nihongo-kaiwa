@@ -62,7 +62,8 @@ function route(l) {
       <small>${S[s.no] ? '★'.repeat(S[s.no]) : ''}</small>${i === l.st.length - 1 && LINES[LINES.indexOf(l) + 1] ? `<em class="xfer">换乘</em>` : ''}</a>`).join('')}</div></div>`;
 }
 function home() {
-  $app.innerHTML = icCard() + timetable() + `<h3>🗺️ 路线图 <small style="font-size:12px;color:var(--mute);font-weight:600">从五十音坐到 N1，每到一站盖一个章</small></h3>` + LINES.map(route).join('');
+  $app.innerHTML = `<div id="bigmap"></div>` + icCard() + timetable() + `<h3>🚉 各条线路 <small style="font-size:12px;color:var(--mute);font-weight:600">每到一站盖一个章</small></h3>` + LINES.map(route).join('');
+  MAP.mount(document.getElementById('bigmap'), LINES, stars());
   const ic = document.getElementById('ic');
   ic.onclick = () => { ic.classList.remove('pi'); void ic.offsetWidth; ic.classList.add('pi'); PI();
     if (checkin()) { toast('ピッ！打卡成功 +10 积分'); setTimeout(home, 600); } else toast('ピッ！今天已经乘过车了'); };

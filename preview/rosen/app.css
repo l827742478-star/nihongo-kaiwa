@@ -115,3 +115,45 @@ h3{font-size:16px;font-weight:900;margin:22px 0 10px;display:flex;align-items:ce
 .cr b{display:block;color:#cf6c61;font-size:13.5px}
 .toast{position:fixed;left:50%;top:70px;transform:translateX(-50%);background:#2f2b28;color:#fff;font-weight:800;padding:10px 18px;border-radius:999px;z-index:20;font-size:14px;animation:tst 1.8s forwards}
 @keyframes tst{0%{opacity:0;transform:translate(-50%,-8px)}15%,80%{opacity:1;transform:translate(-50%,0)}100%{opacity:0}}
+/* 首页大地图 */
+#bigmap{margin:-16px -16px 16px}
+.mapwrap{position:relative;height:min(118vw,640px);overflow:hidden;background:#f3efe6;touch-action:none}
+.mapwrap svg{width:100%;height:100%;display:block;cursor:grab}
+.mapwrap .sea{fill:#f3efe6}.mapwrap .dust{fill:#d9cfbd;opacity:.5}
+.mapwrap .ln{fill:none;stroke:var(--c);stroke-width:12;stroke-linecap:round;stroke-linejoin:round}
+.mapwrap .loop{fill:none;stroke:var(--c);stroke-width:14}
+.mapwrap .st{fill:#fff;stroke:var(--c);stroke-width:3.5}
+.mapwrap .st.off{stroke-width:2.2}
+.mapwrap .st.on{fill:var(--c)}
+.mapwrap .sk{font:700 14px "Hiragino Maru Gothic ProN",sans-serif;text-anchor:middle;fill:#2f2b28;pointer-events:none}.mapwrap .sk.on{fill:#fff}
+.mapwrap .sn{font:800 13px -apple-system,"PingFang SC",sans-serif;text-anchor:middle;fill:#6b625a;pointer-events:none}
+.mapwrap .xf{fill:#fff;stroke:#2f2b28;stroke-width:2.5}
+.mapwrap .lbadge circle{fill:#fff;stroke:var(--c);stroke-width:6}.mapwrap .lbadge text{font:900 13px -apple-system,sans-serif;text-anchor:middle;fill:#2f2b28}
+.mapwrap .loopname{font:900 30px "Hiragino Mincho ProN",serif;text-anchor:middle;fill:#2f2b28;letter-spacing:3px}
+.mapwrap .loopsub{font:700 14px "Hiragino Maru Gothic ProN",sans-serif;text-anchor:middle;fill:#8a8178;letter-spacing:2px}
+/* 夜景 */
+.mapwrap.night{background:#0a101c}
+.mapwrap.night .sea{fill:url(#city)}.mapwrap.night .dust{fill:#ffe9b0;opacity:.35}
+.mapwrap.night .ln{filter:url(#glow);opacity:.9}
+.mapwrap.night .loop{filter:url(#glow)}
+.mapwrap.night .st{fill:#121a2a}.mapwrap.night .st.off{fill:#0f1624;opacity:.85}
+.mapwrap.night .st.on{fill:#fff6d6;stroke:#ffd36b;filter:url(#glow);animation:twk 2.6s infinite}
+@keyframes twk{50%{opacity:.75}}
+.mapwrap.night .sk{fill:#e9e2d6}.mapwrap.night .sk.on{fill:#3a2a00}
+.mapwrap.night .sn{fill:#9aa6b8}
+.mapwrap.night .xf{fill:#0a101c;stroke:#fff}
+.mapwrap.night .lbadge circle{fill:#0a101c}.mapwrap.night .lbadge text{fill:#fff}
+.mapwrap.night .loopname{fill:#fff6e6}.mapwrap.night .loopsub{fill:#9aa6b8}
+.mhead{position:absolute;left:16px;top:14px;pointer-events:none;color:#2f2b28}
+.mhead small{font-size:10.5px;letter-spacing:2px;opacity:.7;font-weight:700}
+.mhead b{display:block;font:900 30px "Hiragino Mincho ProN","Songti SC",serif;letter-spacing:3px;margin:2px 0}
+.mhead span{font-size:12px;opacity:.85}
+.night .mhead{color:#fff6e6;text-shadow:0 0 12px rgba(255,210,120,.35)}
+.mstat{position:absolute;left:12px;right:12px;bottom:12px;display:flex;gap:8px;pointer-events:none}
+.mstat div{flex:1;background:rgba(255,255,255,.85);border-radius:12px;padding:7px 8px;font-size:11px;font-weight:700;text-align:center;color:#6b625a}
+.mstat b{display:block;font-size:18px;font-weight:900;color:#2f2b28}
+.night .mstat div{background:rgba(16,24,40,.72);color:#9aa6b8;border:1px solid rgba(255,255,255,.08)}
+.night .mstat b{color:#ffd36b}
+.mtool{position:absolute;right:12px;top:14px;display:flex;flex-direction:column;gap:6px}
+.mtool button{width:34px;height:34px;border-radius:10px;background:rgba(255,255,255,.9);font-weight:900;font-size:16px;box-shadow:0 2px 6px rgba(0,0,0,.12)}
+.night .mtool button{background:rgba(16,24,40,.8);color:#fff;border:1px solid rgba(255,255,255,.12)}
