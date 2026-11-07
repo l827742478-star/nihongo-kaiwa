@@ -65,7 +65,8 @@ function route(l) {
 function home() {
   const B = window.BANK || [];
   $app.innerHTML = `<div id="bigmap"></div>` + icCard() + timetable() + `<div class="kb"><a href="#/bank"><span>📚</span><b>真题库</b><small>${B.length} 套 · ${B.reduce((a, b) => a + b[2], 0)} 题</small></a><a href="#/words"><span>✦</span><b>单词星系</b><small>${(window.WORDS || []).length} 词 · 连真题原句</small></a>
-    <a href="#/data"><span>📊</span><b>数据看板</b><small>高频词 · 考点</small></a><a href="#/wrong"><span>📕</span><b>错题本</b><small>做错自动收录</small></a></div>` + `<h3>🚉 各条线路 <small style="font-size:12px;color:var(--mute);font-weight:600">每到一站盖一个章</small></h3>` + LINES.map(route).join('');
+    <a href="#/grams"><span>△</span><b>语法星系</b><small>${(window.GRAMS || []).length} 个文法 · 连真题</small></a><a href="#/data"><span>📊</span><b>数据看板</b><small>高频词 · 考点</small></a>
+    <a href="#/mine"><span>⭐</span><b>我的收藏</b><small>难题 · 易混 · 想再看</small></a><a href="#/wrong"><span>📕</span><b>错题本</b><small>做错自动收录</small></a></div>` + `<h3>🚉 各条线路 <small style="font-size:12px;color:var(--mute);font-weight:600">每到一站盖一个章</small></h3>` + LINES.map(route).join('');
   MAP.mount(document.getElementById('bigmap'), LINES, stars());
   const ic = document.getElementById('ic');
   ic.onclick = () => { ic.classList.remove('pi'); void ic.offsetWidth; ic.classList.add('pi'); PI();
@@ -278,7 +279,7 @@ function bankRun(d, strict) {
       if (strict) { ans[q.n] = j; $app.querySelectorAll('.opt').forEach(x => x.classList.toggle('sel', +x.dataset.j === j)); return; }
       if (ans[q.n] !== undefined) return; ans[q.n] = j; record(q, j); j === q.a ? OK() : NG();
       $app.querySelector('.ex-o').innerHTML = optsHtml(q, true, j);
-      document.getElementById('why').innerHTML = whyHtml(q, j) + kNodes(q) + `<button class="btn go" id="nx">${i + 1 < Q.length ? '下一题 ›' : '看成绩'}</button>`;
+      document.getElementById('why').innerHTML = whyHtml(q, j) + kNodes(q) + markBar(d, q) + `<button class="btn go" id="nx">${i + 1 < Q.length ? '下一题 ›' : '看成绩'}</button>`; bindMarks($app, d);
       document.getElementById('nx').onclick = () => { i++; draw(); scrollTo(0, 0); }; });
   };
   const confirm2 = () => { toast(`还有 ${Q.length - Object.keys(ans).length} 题没做，再点一次「交卷」就交`); const k = confirm2.k; confirm2.k = true; return k; };
@@ -289,8 +290,8 @@ function bankRun(d, strict) {
     $app.innerHTML = `<div style="--c:${c}"><a class="back" href="#/bank/${d.lv}">‹ 真题库</a><div class="card ex-intro"><div style="font-size:44px">${r / Q.length >= .6 ? '🎉' : '💪'}</div>
       <h2>${r} / ${Q.length}（${Math.round(r / Q.length * 100)}%）</h2><p>${d.sess.replace('.', '年')}月 ${d.lv}${strict ? ` · 用时 ${min} 分钟` : ''}</p>
       <div class="ex-box">${ms.map(m => { const qs = Q.filter(q => q.m === m), ok = qs.filter(q => ans[q.n] === q.a).length; return `<span>問題${m} ${esc(d.mondai[m] || '')}　${ok}/${qs.length}</span>`; }).join('')}</div></div>
-      ${strict ? `<h3>逐题解析</h3>` + Q.map(q => `<div class="gm"><div class="jp" style="font-weight:700">${q.n}. ${U(q.q)}</div><div style="font-size:13px;color:var(--mute);margin:4px 0">你选：${ans[q.n] === undefined ? '没做' : ans[q.n] + 1}</div>${whyHtml(q, ans[q.n])}${kNodes(q)}</div>`).join('') : ''}
-      <a class="btn go" href="#/wrong">📕 错题本</a><a class="btn" href="#/bank/${d.lv}">回到真题库</a></div>`; scrollTo(0, 0); };
+      ${strict ? `<h3>逐题解析</h3>` + Q.map(q => `<div class="gm"><div class="jp" style="font-weight:700">${q.n}. ${U(q.q)}</div><div style="font-size:13px;color:var(--mute);margin:4px 0">你选：${ans[q.n] === undefined ? '没做' : ans[q.n] + 1}</div>${whyHtml(q, ans[q.n])}${kNodes(q)}${markBar(d, q)}</div>`).join('') : ''}
+      <a class="btn go" href="#/wrong">📕 错题本</a><a class="btn" href="#/bank/${d.lv}">回到真题库</a></div>`; bindMarks($app, d); scrollTo(0, 0); };
   draw();
 }
 // ---------- 单词星系：每个词连到真题原句 ----------
@@ -321,7 +322,7 @@ function wordList(lv, sort, kw, page) {
 }
 async function wordPage(w) {
   const r = (window.WORDS || []).find(x => x[0] === w); if (!r) return wordList();
-  let C = []; try { C = ((await (await fetch(`nodes/ctx_${r[3]}.json`)).json())[w]) || []; } catch (e) {}
+  let C = [], CO = []; try { const x = (await (await fetch(`nodes/ctx_${r[3]}.json`)).json())[w] || {}; C = x.c || []; CO = x.co || []; } catch (e) {}
   const K = known(), hl = t => esc(t).replace(new RegExp(esc(w.split('/')[0]).replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'), m => `<mark>${m}</mark>`);
   $app.innerHTML = `<div style="--c:#c9a24a"><a class="back" href="#/words">‹ 单词星系</a>
     <div class="wn"><div class="wn-h"><span>✦</span><div><small>WORD NODE</small><b>单词详情</b></div><em>${r[3]}</em></div>
@@ -331,7 +332,8 @@ async function wordPage(w) {
       <div class="wn-g"><div><small>累计出现</small><b>${r[4]} 次</b></div><div><small>作为考点</small><b>${r[5]} 次</b></div><div><small>首次</small><b>${r[6] ? sessName(r[6]) : '—'}</b></div><div><small>最近</small><b>${r[7] ? sessName(r[7]) : '—'}</b></div></div></div>
     <h3>① 真题原文语境 <small style="font-size:12px;color:var(--mute);font-weight:600">${C.length ? `最近的 ${C.length} 句` : '真题里还没出现过'}</small></h3>
     ${C.map(([sid, n, m, kind, t]) => `<div class="wc"><small>${sid.split('_')[0]} · ${sessName(sid.split('_')[1])} · 問題${m} · 第${n}题${kind === 'p' ? ' · 文章' : kind === 'o' ? ' · 选项' : ''}</small><div class="jp">${hl(t)}</div><a href="#/q/${sid}/${n}">独立做题 ›</a></div>`).join('')}
-    <h3>② 所属级别</h3><a class="wc-tag" href="#/words">${r[3]} 单词星系</a></div>`;
+    <h3>② 所属级别</h3><a class="wc-tag" href="#/words">${r[3]} 单词星系</a>
+    ${CO.length ? `<h3>③ 真题共现单词 <small style="font-size:12px;color:var(--mute);font-weight:600">在同一道题里一起出现，按次数排</small></h3><div class="kn">${CO.map(([x, n]) => `<a href="#/w/${encodeURIComponent(x)}">${esc(x)} · ${n}题</a>`).join('')}</div>` : ''}</div>`;
   document.getElementById('sp').onclick = () => say(r[1] || r[0]);
   document.getElementById('kn').onclick = () => { const k = known(); k.has(w) ? k.delete(w) : k.add(w); store.set('known', [...k]); wordPage(w); };
 }
@@ -339,7 +341,57 @@ async function oneQ(id, n) {
   const d = await bankLoad(id); if (!d) return; const i = d.qs.findIndex(q => q.n === +n); if (i < 0) return bankIntro(id);
   bankRun({...d, qs: [d.qs[i]]}, false);
 }
-const kNodes = q => q.k && q.k.length ? `<div class="kn"><small>本题知识节点 · 点击查看</small>${q.k.map(w => `<a href="#/w/${encodeURIComponent(w)}">词 · ${esc(w)}</a>`).join('')}</div>` : '';
+const kNodes = q => (q.k && q.k.length) || (q.g && q.g.length) ? `<div class="kn"><small>本题知识节点 · 点击查看</small>${(q.g || []).map(g => `<a class="g" href="#/g/${encodeURIComponent(g)}">文法 · ${esc(g.split('|')[1])}</a>`).join('')}${(q.k || []).map(w => `<a href="#/w/${encodeURIComponent(w)}">词 · ${esc(w)}</a>`).join('')}</div>` : '';
+// 加入我的收藏：难题 / 易混题 / 想再看（错题自动收）
+const MK = {hard: '难题', mix: '易混题', again: '想再看'};
+const marks = () => store.get('marks', {});
+const markBar = (d, q) => { const id = d.lv + '_' + d.sess + '|' + q.n, m = marks()[id] || [];
+  return `<div class="mk" data-id="${id}"><small>☆ 加入我的收藏（再点一次取消）</small>${Object.entries(MK).map(([k, n]) => `<button data-k="${k}" class="${m.includes(k) ? 'on' : ''}">${m.includes(k) ? '★' : '☆'} ${n}</button>`).join('')}</div>`; };
+function bindMarks(root, d) {
+  root.querySelectorAll('.mk button').forEach(b => b.onclick = () => { const id = b.parentElement.dataset.id, n = +id.split('|')[1], q = d.qs.find(x => x.n === n), M = marks(), m = M[id] || [], k = b.dataset.k;
+    M[id] = m.includes(k) ? m.filter(x => x !== k) : [...m, k]; if (!M[id].length) delete M[id]; store.set('marks', M);
+    const S = store.get('marked', {}); if (M[id]) S[id] = {lv: d.lv, sess: d.sess, m: q.m, q: q.q, o: q.o, a: q.a, why: q.why}; else delete S[id]; store.set('marked', S);
+    b.classList.toggle('on'); b.textContent = (b.classList.contains('on') ? '★ ' : '☆ ') + MK[k]; });
+}
+function mine(tab) {
+  tab = tab || 'hard'; const M = marks(), S = store.get('marked', {}), L = Object.keys(M).filter(id => M[id].includes(tab) && S[id]);
+  $app.innerHTML = `<div style="--c:#c9a24a"><a class="back" href="#/">‹ 首页</a><h2>⭐ 我的收藏</h2>
+    <div class="bk-tabs">${Object.entries(MK).map(([k, n]) => `<a href="#/mine/${k}" class="${k === tab ? 'on' : ''}">${n}<small>${Object.keys(M).filter(id => M[id].includes(k)).length} 题</small></a>`).join('')}<a href="#/wrong">错题<small>${store.get('wrong2', []).length} 题</small></a></div>
+    ${L.length ? L.map(id => { const q = S[id], [sid, n] = id.split('|'); return `<div class="gm" style="margin-top:10px"><small style="color:var(--mute)">${q.lv} ${sessName(q.sess)} · 問題${q.m} · 第${n}题</small><div class="jp" style="margin:4px 0">${U(q.q)}</div><div style="font-size:13.5px">正确答案：<b class="jp">${q.a + 1}. ${U(q.o[q.a])}</b></div><a class="wc-a" href="#/q/${sid}/${n}">再做一次 ›</a></div>`; }).join('')
+      : '<div class="card" style="text-align:center;margin-top:14px">还没有收藏。做题时点「☆ 难题 / 易混题 / 想再看」就会存到这里。</div>'}</div>`;
+}
+// ---------- 语法星系 ----------
+function gramList(lv, sort, kw) {
+  const G = window.GRAMS || []; lv = lv || '全部'; sort = sort || 'cnt'; const hide = store.get('hide', '');
+  let L = G.filter(r => (lv === '全部' || r[1] === lv) && (!kw || r[0].includes(kw) || r[2].includes(kw)));
+  L = [...L].sort(sort === 'kao' ? (a, b) => b[8] - a[8] || b[7] - a[7] : (a, b) => b[11] - a[11] || b[7] - a[7]);
+  $app.innerHTML = `<div style="--c:#d98aa8"><a class="back" href="#/">‹ 首页</a><h2>△ 语法星系</h2>
+    <p style="color:var(--mute);font-size:13.5px">共 ${G.length} 个文法，${G.filter(r => r[7]).length} 个在真题里出现过，${G.filter(r => r[8]).length} 个当正确答案考过。</p>
+    <div class="wl-hide"><b>一键遮挡</b><button data-h="ja" class="${hide === 'ja' ? 'on' : ''}">遮挡日文</button><button data-h="zh" class="${hide === 'zh' ? 'on' : ''}">遮挡中文</button></div>
+    <input id="kw" class="wl-kw" placeholder="搜索文法，比如 ざるを得ない、について" value="${esc(kw || '')}">
+    <div class="wl-f">${['全部', 'N1', 'N2', 'N3', 'N4', 'N5'].map(x => `<button data-lv="${x}" class="${x === lv ? 'on' : ''}">${x}</button>`).join('')}
+      <select id="so"><option value="cnt" ${sort === 'cnt' ? 'selected' : ''}>按出现场次</option><option value="kao" ${sort === 'kao' ? 'selected' : ''}>按考查次数</option></select></div>
+    <p class="wl-n">${L.length} 个文法${lv === 'N4' && !L.length ? '（N4 文法正在整理）' : ''}</p>
+    <div class="wl ${hide ? 'hide-' + hide : ''}">${L.slice(0, 120).map(r => `<a class="wl-r" href="#/g/${encodeURIComponent(r[1] + '|' + r[0])}"><span class="wl-w"><b class="jp">${esc(r[0])}</b></span><span class="wl-zh">${esc(r[2])}</span>
+      <span class="wl-s"><em class="lv">${r[1]}</em>${r[11] ? `${r[11]} 场出现` : '真题未出现'}${r[8] ? ` · 考查 ${r[8]} 次` : ''}</span></a>`).join('')}</div></div>`;
+  $app.querySelectorAll('[data-lv]').forEach(b => b.onclick = () => gramList(b.dataset.lv, sort, kw));
+  $app.querySelectorAll('[data-h]').forEach(b => b.onclick = () => { store.set('hide', hide === b.dataset.h ? '' : b.dataset.h); gramList(lv, sort, kw); });
+  document.getElementById('so').onchange = e => gramList(lv, e.target.value, kw);
+  const k = document.getElementById('kw'); k.onchange = () => gramList(lv, sort, k.value.trim());
+}
+async function gramPage(key) {
+  const [lv, g] = key.split('|'), r = (window.GRAMS || []).find(x => x[1] === lv && x[0] === g); if (!r) return gramList();
+  let C = []; try { C = (await (await fetch('nodes/gctx.json')).json())[key] || []; } catch (e) {}
+  $app.innerHTML = `<div style="--c:#d98aa8"><a class="back" href="#/grams">‹ 语法星系</a>
+    <div class="wn"><div class="wn-h"><span style="color:#e9a6c0;background:rgba(233,166,192,.15)">△</span><div><small>GRAMMAR NODE</small><b>文法详情</b></div><em style="color:#e9a6c0;border-color:#e9a6c0">${lv}</em></div>
+      <div class="wn-w jp" style="font-size:36px">${esc(r[0])}</div>${r[6] ? `<div class="wn-r">${esc(r[6])}</div>` : ''}
+      <div class="wn-zh"><small>中文意思</small>${esc(r[2])}</div>
+      ${r[3] ? `<div class="wn-zh"><small>接续</small>${esc(r[3])}</div>` : ''}
+      ${r[4] ? `<div class="wn-zh"><small>例句</small><span class="jp">${RB(r[4])}</span>${r[5] ? `<br><span style="font-size:13px;color:#b9c4d6">${esc(r[5])}</span>` : ''}</div>` : ''}
+      <div class="wn-g"><div><small>真题出现</small><b>${r[11]} 场</b></div><div><small>当正确答案考过</small><b>${r[8]} 次</b></div><div><small>首次</small><b>${r[9] ? sessName(r[9]) : '—'}</b></div><div><small>最近</small><b>${r[10] ? sessName(r[10]) : '—'}</b></div></div></div>
+    <h3>① 真题原文语境 <small style="font-size:12px;color:var(--mute);font-weight:600">${C.length ? `最近的 ${C.length} 句` : '真题库里还没出现'}</small></h3>
+    ${C.map(([sid, n, m, kind, t]) => `<div class="wc"><small>${sid.split('_')[0]} · ${sessName(sid.split('_')[1])} · 問題${m} · 第${n}题${kind === 'p' ? ' · 文章' : kind === 'o' ? ' · 选项' : ''}</small><div class="jp">${esc(t)}</div><a href="#/q/${sid}/${n}">独立做题 ›</a></div>`).join('')}</div>`;
+}
 // ---------- 数据看板 ----------
 function dashboard() {
   const W = window.WORDS || [], B = window.BANK || [], STOP = new Set(['こと', 'もの', 'ため', 'よう', 'とき', 'ところ', 'わけ', 'はず', '思う', '考える', '言う', '人間', '自分', '社会', '必要', '筆者', '問題', '場合', 'いく', 'さん', '良い', '一部']),
@@ -378,6 +430,9 @@ function go() {
   else if (location.hash.startsWith('#/w/')) wordPage(decodeURIComponent(location.hash.slice(4)));
   else if (location.hash.startsWith('#/q/')) oneQ(...location.hash.slice(4).split('/'));
   else if (location.hash === '#/data') dashboard();
+  else if (location.hash.startsWith('#/grams')) gramList();
+  else if (location.hash.startsWith('#/g/')) gramPage(decodeURIComponent(location.hash.slice(4)));
+  else if (location.hash.startsWith('#/mine')) mine(location.hash.split('/')[2]);
   else if (location.hash.startsWith('#/bank')) bankList(location.hash.split('/')[2]);
   else if (location.hash.startsWith('#/exam/')) bankIntro(location.hash.slice(7)); else home();
   scrollTo(0, 0);
