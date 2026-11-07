@@ -21,6 +21,7 @@ const MAP = (() => {
       if (cnt[s.name] > 1) { if (done.has(s.name)) return; done.add(s.name);
         g += `<a ${l.off ? '' : `href="#/s/${s.no}"`}><rect x="${(x - 6).toFixed(1)}" y="${(y - 4).toFixed(1)}" width="12" height="8" rx="4" class="xf${on ? ' on' : ''}"/></a>`; }
       else if (k) g += `<a href="#/s/${s.no}">${on ? `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="10" class="halo"/>` : ''}<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="5.6" class="st${on ? ' on' : ''}" style="--c:${l.color}"/><text x="${x.toFixed(1)}" y="${(y + 2.4).toFixed(1)}" class="sk${on ? ' on' : ''}">${s.kana[0][0].slice(0, 1)}</text></a>`;
+      else if (!l.off) g += `<a href="#/s/${s.no}">${on ? `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="8" class="halo"/>` : ''}<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="4" class="st${on ? ' on' : ''}" style="--c:${l.color}"/></a>`;
       else g += `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="3" class="st${l.off ? ' off' : ''}${on ? ' on' : ''}" style="--c:${l.color}"/>`;
       if (!done.has('L' + s.name)) { done.add('L' + s.name);
         g += `<text x="${(x + 7).toFixed(1)}" y="${(y + 3).toFixed(1)}" class="sn${k || cnt[s.name] > 1 ? ' big' : ''}">${s.name}</text>`; } }));

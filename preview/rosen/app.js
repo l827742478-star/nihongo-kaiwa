@@ -21,7 +21,9 @@ const NG = () => tone([[300, .2, .08, 'triangle']]);
 
 // ---------- 线路：假名两条 + N5–N1（内容陆续接入） ----------
 const LINES = [...KANA.map(l => ({...l, level: '五十音'})),
-  ...TOKYO.L.map(l => ({...l, off: true, st: l.st.map((n, i) => ({no: l.code + String(i + 1).padStart(2, '0'), name: n, theme: i === l.st.length - 1 ? l.level + ' 毕业考' : ''}))}))];
+  ...TOKYO.L.map(l => l.code === 'G' && window.N5 ? {...l, st: N5.st} :
+    ({...l, off: true, st: l.st.map((n, i) => ({no: l.code + String(i + 1).padStart(2, '0'), name: n, theme: i === l.st.length - 1 ? l.level + ' 毕业考' : ''}))}))];
+const mark = s => s.kana ? s.kana[0][0].slice(0, 2) : s.name[0];
 const yomi = n => (TOKYO.S[n] || [])[2] || '';
 const stars = () => store.get('stars', {});
 const allSt = () => LINES.flatMap(l => l.st.map(s => ({l, s})));
@@ -70,11 +72,22 @@ function home() {
 function station(no) {
   const x = findSt(no); if (!x || x.l.off) return home();
   const {l, s} = x, i = l.st.indexOf(s), prev = l.st[i - 1], nx = l.st[i + 1];
-  const many = s.kana.length > 10;
-  $app.innerHTML = `<div style="--c:${l.color}"><a class="back" href="#/">‹ 路线图</a>
+  const many = s.kana && s.kana.length > 10;
+  const head = `<div style="--c:${l.color}"><a class="back" href="#/">‹ 路线图</a>
     <div class="sign"><span class="num">${l.code}<em>${s.no.slice(-2)}</em></span><small class="yomi">${esc(yomi(s.name))}</small><b>${esc(s.name)}</b><small>${esc(l.name)} · 这一站学 <em class="theme">${esc(s.theme)}</em></small>
       <div class="band">${prev ? `<a href="#/s/${prev.no}">‹ ${esc(prev.name)}</a>` : '<span></span>'}${nx ? `<a href="#/s/${nx.no}">${esc(nx.name)} ›</a>` : '<span>终点站</span>'}</div></div>
-    <div class="ann"><button id="annb">🔊</button><div><div class="jp">${esc(s.ann)}</div><small>车内广播：下一站，${esc(s.name)}（${esc(s.theme)}）</small></div></div>
+    <div class="ann"><button id="annb">🔊</button><div><div class="jp">${esc(s.ann)}</div><small>车内广播：下一站，${esc(s.name)}（${esc(s.theme)}）</small></div></div>`;
+  if (s.exam) { $app.innerHTML = head + `<div class="card" style="text-align:center;padding:30px 18px"><div style="font-size:44px">🎓</div><h2>${esc(l.level)} 毕业考</h2>
+      <p style="color:var(--mute);font-size:14px;line-height:1.7">用一整套真题来考：文字词汇、文法、读解、听力。<br>考过就能换乘下一条线。</p><p style="margin-top:12px;font-weight:800;color:var(--c)">真题题库正在接入</p></div></div>`;
+    document.getElementById('annb').onclick = () => play(s.aa); return; }
+  if (s.words && !s.kana) { const hit = s.words.filter(w => w[3]).length;
+    $app.innerHTML = head + `<h3>这一站的单词 <small style="font-size:12px;color:var(--mute);font-weight:600">${s.words.length} 个，${hit} 个在真题里出现过</small></h3>
+      ${s.words.map(([w, rd, zh, n, a]) => `<button class="vw" data-a="${a}"><span class="pl">▶</span><span class="vw-w"><b class="jp">${esc(w)}</b>${rd ? `<small>${esc(rd)}</small>` : ''}</span><span class="vw-zh">${esc(zh)}</span>${n ? `<em class="hot${n >= 8 ? ' h' : ''}">真题 ${n} 场</em>` : ''}</button>`).join('')}
+      <button class="btn go" id="go">🚃 出发 · 过关小测</button></div>`;
+    document.getElementById('annb').onclick = () => play(s.aa); setTimeout(() => play(s.aa), 300);
+    $app.querySelectorAll('[data-a]').forEach(b => b.onclick = () => play(b.dataset.a));
+    document.getElementById('go').onclick = () => vquiz(x); return; }
+  $app.innerHTML = head + `
     <h3>这一站的假名 <small style="font-size:12px;color:var(--mute);font-weight:600">点一下听发音</small></h3>
     <div class="kgrid">${s.kana.map(([k, r, a]) => `<button class="kc" data-a="${a}"><div class="kana" style="${many ? 'font-size:26px' : ''}">${k}</div><small>${r}</small></button>`).join('')}</div>
     <h3>用这一站的假名读单词</h3>
@@ -116,12 +129,39 @@ function quiz({l, s}) {
   };
   draw();
 }
+// ---------- 单词小测：听音选意思 / 看词选意思 / 看意思选词 ----------
+function vquiz({l, s}) {
+  const W = s.words, pick = a => a[Math.random() * a.length | 0];
+  const pool = [...W].sort((a, b) => b[3] - a[3] + (Math.random() - .5) * 6).slice(0, 10);
+  const Q = pool.map((t, n) => { const mode = ['hear', 'mean', 'pick'][n % 3], o = new Set([t]);
+    while (o.size < Math.min(4, W.length)) o.add(pick(W)); return {t, mode, opts: [...o].sort(() => Math.random() - .5)}; });
+  let i = 0, right = 0;
+  const draw = () => {
+    if (i >= Q.length) return arrive(l, s, right);
+    const q = Q[i], lab = o => q.mode === 'pick' ? esc(o[0]) : esc(o[2]);
+    $app.innerHTML = `<div style="--c:${l.color}"><a class="back" href="#/s/${s.no}">‹ ${esc(s.name)}</a>
+      <div class="qtop"><span>${l.code}${s.no.slice(-2)} ${esc(s.name)} · 过关小测</span><span>${i + 1} / ${Q.length}</span></div><div class="bar"><i style="width:${i / Q.length * 100}%"></i></div>
+      <div class="qbox">${q.mode === 'hear' ? `<button class="spk" id="spk">🔊</button><small>听一听，是什么意思？</small>`
+        : q.mode === 'mean' ? `<div class="kana" style="font-size:42px">${esc(q.t[0])}</div>${q.t[1] ? `<small>${esc(q.t[1])}</small>` : ''}<small>是什么意思？</small>`
+        : `<div style="font-size:26px;font-weight:900">${esc(q.t[2])}</div><small>日语怎么说？</small>`}</div>
+      <div class="opts">${q.opts.map((o, j) => `<button class="opt r${q.mode === 'pick' ? ' jp' : ''}" style="font-size:${q.mode === 'pick' ? 21 : 16}px" data-j="${j}">${lab(o)}</button>`).join('')}</div></div>`;
+    const sp = document.getElementById('spk'); if (sp) { sp.onclick = () => play(q.t[4]); setTimeout(() => play(q.t[4]), 250); }
+    $app.querySelectorAll('.opt').forEach(b => b.onclick = () => {
+      if ($app.querySelector('.opt.ok')) return;
+      const good = q.opts[+b.dataset.j] === q.t;
+      $app.querySelectorAll('.opt').forEach((c, j) => { if (q.opts[j] === q.t) c.classList.add('ok'); });
+      if (good) { right++; OK(); } else { b.classList.add('no'); NG(); }
+      play(q.t[4]); i++; setTimeout(draw, good ? 900 : 1700);
+    });
+  };
+  draw();
+}
 function arrive(l, s, right) {
   const st = right >= 10 ? 3 : right >= 9 ? 2 : right >= 8 ? 1 : 0, S = stars(), first = !S[s.no] && st;
   if (st > (S[s.no] || 0)) { S[s.no] = st; store.set('stars', S); store.set('pt', store.get('pt', 0) + st * 5); }
   const nx = l.st[l.st.indexOf(s) + 1], nl = LINES[LINES.indexOf(l) + 1];
   $app.innerHTML = `<div class="arrive" style="--c:${l.color}">
-    ${st ? `<div class="stamp${first ? ' new' : ''}"><span class="kana">${s.kana[0][0].slice(0, 2)}</span><b>${esc(s.name)}駅</b><small>${esc(s.theme)} · ${new Date().getMonth() + 1}.${new Date().getDate()}</small></div>` : ''}
+    ${st ? `<div class="stamp${first ? ' new' : ''}"><span class="kana">${esc(mark(s))}</span><b>${esc(s.name)}駅</b><small>${esc(s.theme)} · ${new Date().getMonth() + 1}.${new Date().getDate()}</small></div>` : ''}
     <h2>${st ? '到站了！' : '差一点点…'}</h2><div class="stars">${[1, 2, 3].map(k => `<i class="${k <= st ? 'on' : ''}">★</i>`).join('')}</div>
     <p style="color:var(--mute);font-size:14px">答对 ${right} / 10　${st ? `+${st * 5} 积分` : '答对 8 题才能到站'}</p>
     ${st && nx ? `<a class="btn go" href="#/s/${nx.no}">🚃 下一站：${esc(nx.name)}</a>` : ''}
@@ -134,7 +174,7 @@ function stampBook() {
   const S = stars();
   $app.innerHTML = `<a class="back" href="#/">‹ 路线图</a><h2>🎫 印章册</h2><p style="color:var(--mute);font-size:13.5px;margin-bottom:6px">每到一站盖一个章，集满一条线就毕业了。</p>` +
     LINES.filter(l => !l.off).map(l => `<h3><span class="badge" style="--c:${l.color};width:26px;height:26px;border-width:4px;font-size:11px">${l.code}</span>${l.name}　${l.st.filter(s => S[s.no]).length}/${l.st.length}</h3>
-    <div class="sbook" style="--c:${l.color}">${l.st.map(s => `<a href="#/s/${s.no}" class="stamp${S[s.no] ? '' : ' no'}"><span class="kana">${S[s.no] ? s.kana[0][0].slice(0, 2) : '?'}</span><b>${esc(s.name)}</b><small>${S[s.no] ? '★'.repeat(S[s.no]) : l.code + s.no.slice(-2)}</small></a>`).join('')}</div>`).join('');
+    <div class="sbook" style="--c:${l.color}">${l.st.map(s => `<a href="#/s/${s.no}" class="stamp${S[s.no] ? '' : ' no'}"><span class="kana">${S[s.no] ? esc(mark(s)) : '?'}</span><b>${esc(s.name)}</b><small>${S[s.no] ? '★'.repeat(S[s.no]) : l.code + s.no.slice(-2)}</small></a>`).join('')}</div>`).join('');
 }
 function go() {
   au.pause(); const m = location.hash.match(/^#\/s\/(\w+)/);
