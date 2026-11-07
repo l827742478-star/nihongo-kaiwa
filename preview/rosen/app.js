@@ -62,9 +62,15 @@ function route(l) {
     <div class="route">${l.st.map((s, i) => `<a class="stn${S[s.no] ? ' ok' : ''}${cur && cur.s.no === s.no ? ' cur' : ''}" ${l.off ? '' : `href="#/s/${s.no}"`}><i>${s.no.slice(-2)}</i><span>${esc(s.name)}</span><small class="th">${esc(s.theme || '')}</small>
       <small>${S[s.no] ? '★'.repeat(S[s.no]) : ''}</small>${i === l.st.length - 1 && LINES[LINES.indexOf(l) + 1] ? `<em class="xfer">换乘</em>` : ''}</a>`).join('')}</div></div>`;
 }
+const IMG = no => /^N5(0[1-9]|1[0-7])$/.test(no) ? `img/st/${no}.jpg` : null;
 function home() {
-  const B = window.BANK || [];
-  $app.innerHTML = `<div id="bigmap"></div>` + icCard() + timetable() + `<div class="kb"><a href="#/bank"><span>📚</span><b>真题库</b><small>${B.length} 套 · ${B.reduce((a, b) => a + b[2], 0)} 题</small></a><a href="#/words"><span>✦</span><b>单词星系</b><small>${(window.WORDS || []).length} 词 · 连真题原句</small></a>
+  const B = window.BANK || [], nQ = B.reduce((a, b) => a + b[2], 0), nL = B.reduce((a, b) => a + (b[3] || 0), 0);
+  $app.innerHTML = `<section class="hero"><div class="hero-in"><small>— 基于 2010–2026 历年 JLPT 真题 —</small><h1>日本語の<em>銀河鉄道</em></h1>
+      <p class="hero-en">NIHONGO NO GINGA TETSUDŌ · JLPT KNOWLEDGE RAILWAY</p><p class="hero-t">从五十音出发，坐上银河里的列车，<br>一站一站开到 N1</p>
+      <p class="hero-s">覆盖 五十音・N5–N1 · 词汇 / 文法 / 读解 / 听力 · 真题考频</p>
+      <a class="hero-b w" href="#map">开始乘车</a><a class="hero-b" href="#/bank">进入真题库</a><a class="hero-b g" href="#/trains">🚄 按列车种别刷题</a>
+      <div class="hero-k"><div><b>${B.length}</b>套真题</div><div><b>${nQ}</b>道题</div><div><b>${(window.WORDS || []).length}</b>个词</div><div><b>${(window.GRAMS || []).length}</b>个文法</div></div></div></section>
+    <div id="map"></div><div id="bigmap"></div>` + icCard() + timetable() + `<div class="kb"><a href="#/bank"><span>📚</span><b>真题库</b><small>${B.length} 套 · ${B.reduce((a, b) => a + b[2], 0)} 题</small></a><a href="#/words"><span>✦</span><b>单词星系</b><small>${(window.WORDS || []).length} 词 · 连真题原句</small></a>
     <a href="#/grams"><span>△</span><b>语法星系</b><small>${(window.GRAMS || []).length} 个文法 · 连真题</small></a><a href="#/data"><span>📊</span><b>数据看板</b><small>高频词 · 考点</small></a>
     <a href="#/mine"><span>⭐</span><b>我的收藏</b><small>难题 · 易混 · 想再看</small></a><a href="#/wrong"><span>📕</span><b>错题本</b><small>做错自动收录</small></a></div>` + `<h3>🚉 各条线路 <small style="font-size:12px;color:var(--mute);font-weight:600">每到一站盖一个章</small></h3>` + LINES.map(route).join('');
   MAP.mount(document.getElementById('bigmap'), LINES, stars());
@@ -79,7 +85,7 @@ function station(no) {
   const x = findSt(no); if (!x || x.l.off) return home();
   const {l, s} = x, i = l.st.indexOf(s), prev = l.st[i - 1], nx = l.st[i + 1];
   const many = s.kana && s.kana.length > 10;
-  const head = `<div style="--c:${l.color}"><a class="back" href="#/">‹ 路线图</a>
+  const head = `<div style="--c:${l.color}"><a class="back" href="#/">‹ 路线图</a>${IMG(s.no) ? `<div class="st-hero" style="background-image:url(${IMG(s.no)})"></div>` : ''}
     <div class="sign"><span class="num">${l.code}<em>${s.no.slice(-2)}</em></span><small class="yomi">${esc(yomi(s.name))}</small><b>${esc(s.name)}</b><small>${esc(l.name)} · 这一站学 <em class="theme">${esc(s.theme)}</em></small>
       <div class="band">${prev ? `<a href="#/s/${prev.no}">‹ ${esc(prev.name)}</a>` : '<span></span>'}${nx ? `<a href="#/s/${nx.no}">${esc(nx.name)} ›</a>` : '<span>终点站</span>'}</div></div>
     <div class="ann"><button id="annb">🔊</button><div><div class="jp">${esc(s.ann)}</div><small>车内广播：下一站，${esc(s.name)}（${esc(s.theme)}）</small></div></div>`;
@@ -235,6 +241,7 @@ function wrongBook() {
   const b = document.getElementById('rw'); if (b) b.onclick = () => exam(x, EXAM_N5, Q, true);
 }
 // ---------- 真题库：按级别列出每一场，严格模式（计时、交卷后看答案）/ 学习模式（一题一解析） ----------
+const AUD = 'https://ginga-audio-1527476037.cos.ap-guangzhou.myqcloud.com/listen/';
 const LVC = {N1: '#7b5bb6', N2: '#2fa94e', N3: '#b7a66e', N4: '#ee7b1a', N5: '#1f6fb8'};
 function bankList(lv) {
   const B = window.BANK || [], lvs = ['N1', 'N2', 'N3', 'N4', 'N5'].filter(x => B.some(b => b[0] === x)); lv = lv || lvs[0];
@@ -243,7 +250,7 @@ function bankList(lv) {
     <p style="color:var(--mute);font-size:13.5px">历年 JLPT 真题，答案逐题对照标准答案，每题都有中文解析。共 ${B.length} 套、${B.reduce((a, b) => a + b[2], 0)} 题。</p>
     <div class="bk-tabs">${lvs.map(x => `<a href="#/bank/${x}" class="${x === lv ? 'on' : ''}" style="--c:${LVC[x]}">${x}<small>${B.filter(b => b[0] === x).length} 套</small></a>`).join('')}</div>
     <div class="bk-grid">${B.filter(b => b[0] === lv).sort((a, b) => b[1].localeCompare(a[1])).map(([l, ss, n]) => { const d = done[l + '_' + ss];
-      return `<a class="bk-card" href="#/exam/${l}_${ss}"><small>${l} · ${n} 题</small><b>${sessName(ss)}</b>${d ? `<em>上次 ${d.r}/${d.n}</em>` : '<em class="new">未做</em>'}</a>`; }).join('')}</div></div>`;
+      return `<a class="bk-card" href="#/exam/${l}_${ss}"><small>${l} · ${n} 题</small><b>${sessName(ss)}</b>${(window.BANK.find(b => b[0] === l && b[1] === ss) || [])[3] ? '<small class="bk-l">🎧 含听力</small>' : ''}${d ? `<em>上次 ${d.r}/${d.n}</em>` : '<em class="new">未做</em>'}</a>`; }).join('')}</div></div>`;
 }
 async function bankLoad(id) { try { const r = await fetch('bank/' + id + '.json'); return await r.json(); } catch (e) { toast('加载失败，检查一下网络'); return null; } }
 async function bankIntro(id) {
@@ -251,7 +258,7 @@ async function bankIntro(id) {
   const ms = [...new Set(d.qs.map(q => q.m))];
   $app.innerHTML = `<div style="--c:${c}"><a class="back" href="#/bank/${d.lv}">‹ 真题库</a>
     <div class="card ex-intro"><div style="font-size:40px">📖</div><h2>${sessName(d.sess)} JLPT ${d.lv}</h2>
-    <p>整套 ${d.qs.length} 题 · 文字词汇 / 文法 / 读解</p><div class="ex-box">${ms.map(m => `<span>${/N[345]/.test(d.lv) ? (m > 10 ? '文法・読解 ' : '文字・語彙 ') : ''}問題${/N[345]/.test(d.lv) && m > 10 ? m - 10 : m}　${esc(d.mondai[m] || '')}　${d.qs.filter(q => q.m === m).length} 题</span>`).join('')}</div></div>
+    <p>整套 ${d.qs.length} 题 · 文字词汇 / 文法 / 读解${d.qs.some(q => q.au) ? ' / 听力' : ''}</p><div class="ex-box">${ms.map(m => `<span>${m > 20 ? '' : /N[345]/.test(d.lv) ? (m > 10 ? '文法・読解 ' : '文字・語彙 ') : ''}問題${m > 20 ? m - 20 : /N[345]/.test(d.lv) && m > 10 ? m - 10 : m}　${esc(d.mondai[m] || '')}　${d.qs.filter(q => q.m === m).length} 题</span>`).join('')}</div></div>
     <button class="bk-mode" id="m1"><em>严格模式</em><b>模拟真实考试</b><span>全卷计时、统一交卷，做的时候不看答案，交卷后看成绩和每题解析。</span></button>
     <button class="bk-mode g" id="m2"><em>学习模式</em><b>边做题，边看解析</b><span>不计时，每做完一题马上看正确答案、为什么选、四个选项逐项解析。</span></button></div>`;
   document.getElementById('m1').onclick = () => bankRun(d, true);
@@ -259,9 +266,10 @@ async function bankIntro(id) {
 }
 function bankRun(d, strict) {
   const c = LVC[d.lv], Q = d.qs, ans = {}, t0 = Date.now(); let i = 0, tick;
-  const mn = m => (/N[345]/.test(d.lv) && m > 10 ? m - 10 : m), head = q => `問題${mn(q.m)}　${esc(d.mondai[q.m] || '')}`;
+  const mn = m => (m > 20 ? m - 20 : /N[345]/.test(d.lv) && m > 10 ? m - 10 : m), head = q => `問題${mn(q.m)}　${esc(d.mondai[q.m] || '')}`;
   const optsHtml = (q, show, pick) => q.o.map((o, j) => `<button class="opt r jp${show && j === q.a ? ' ok' : ''}${show && pick === j && j !== q.a ? ' no' : ''}${!show && pick === j ? ' sel' : ''}" data-j="${j}"><em>${j + 1}</em>${U(o)}</button>`).join('');
-  const whyHtml = (q, pick) => `<div class="ex-why ${pick === q.a ? 'g' : 'b'}"><b>${pick === undefined ? '正确答案是 ' + (q.a + 1) : pick === q.a ? '⭕ 答对了' : '❌ 正确答案是 ' + (q.a + 1)}</b><p>${esc(q.why)}</p>
+  const scHtml = q => q.sc ? `<details class="ex-ps"><summary>📜 听力原文</summary><div class="jp">${esc(q.sc).replace(/\n/g, '<br>')}</div></details>` : '';
+  const whyHtml = (q, pick) => scHtml(q) + `<div class="ex-why ${pick === q.a ? 'g' : 'b'}"><b>${pick === undefined ? '正确答案是 ' + (q.a + 1) : pick === q.a ? '⭕ 答对了' : '❌ 正确答案是 ' + (q.a + 1)}</b><p>${esc(q.why)}</p>
     ${q.ow.length === 4 ? `<div class="ow">${q.ow.map((w, j) => `<div class="${j === q.a ? 'ok' : ''}"><em>${j + 1}</em>${esc(w)}</div>`).join('')}</div>` : ''}</div>`;
   const record = (q, pick) => { let wr = store.get('wrong2', []); const id = d.lv + '_' + d.sess + '|' + q.n; wr = wr.filter(w => w.id !== id);
     if (pick !== q.a) wr.unshift({id, lv: d.lv, sess: d.sess, m: q.m, q: q.q, o: q.o, a: q.a, why: q.why, ow: q.ow}); store.set('wrong2', wr.slice(0, 800)); };
@@ -272,6 +280,7 @@ function bankRun(d, strict) {
       <div class="qtop"><span>${d.lv} ${sessName(d.sess)} · ${strict ? '严格模式' : '学习模式'}</span><span>${strict ? `<b id="tm">00:00</b>　` : ''}${i + 1} / ${Q.length}</span></div>
       <div class="bar"><i style="width:${i / Q.length * 100}%"></i></div>
       <div class="ex-h jp">${head(q)}</div>${ps ? `<details class="ex-ps" ${q.p !== (Q[i - 1] || {}).p ? 'open' : ''}><summary>阅读文章</summary><div class="jp">${U(ps)}</div></details>` : ''}
+      ${q.au ? `<div class="au"><span>🎧 听一遍再作答，可以反复播放</span><audio controls preload="auto" src="${AUD + q.au}"></audio></div>` : ''}
       <div class="ex-q jp"><small>${q.d || q.n}.</small> ${U(q.q)}</div><div class="ex-o">${optsHtml(q, false, ans[q.n])}</div><div id="why"></div>
       ${strict ? `<div class="bk-nav"><button class="btn" id="pv" ${i ? '' : 'disabled'}>‹ 上一题</button><button class="btn go" id="nx">${i + 1 < Q.length ? '下一题 ›' : '交卷'}</button></div>` : ''}</div>`;
     if (strict) { document.getElementById('pv').onclick = () => { i--; draw(); }; document.getElementById('nx').onclick = () => { if (i + 1 >= Q.length && Object.keys(ans).length < Q.length && !confirm2()) return; i++; draw(); scrollTo(0, 0); }; }
@@ -403,12 +412,43 @@ function dashboard() {
     <div class="card db"><h3>🎯 直接考过的词（N1 文字词汇，按考过的次数）</h3>${bar(kt, r => r[5], '#f2c45a')}</div>
     <div class="card db"><h3>📚 各级别真题</h3>${['N1', 'N2', 'N3', 'N4', 'N5'].map(l => { const x = B.filter(b => b[0] === l); return `<div class="db-l"><b>${l}</b><span>${x.length} 套 · ${x.reduce((a, b) => a + b[2], 0)} 题</span></div>`; }).join('')}</div></div>`;
 }
+// ---------- 列车种别：按题型集中刷（对应星图的「六种能力」） ----------
+const TRAINS = [
+  ['kakueki', '各駅停車', '短篇读解', '一站一停，200 字左右的短文，练抓主旨', {N1: [8], N2: [10], N3: [14], N4: [14], N5: [14]}],
+  ['kaisoku', '快速', '中篇读解', '跳过小站，500 字左右的中篇，练找原因和观点', {N1: [9], N2: [11], N3: [15], N4: [15], N5: [15]}],
+  ['tokkyu', '特急', '长篇・主张读解', '一口气跑完长文，练作者的主张和全文结构', {N1: [10, 12], N2: [13], N3: [16]}],
+  ['shinkansen', '新幹線', '综合理解・信息检索', '两篇对比、海报传单，最快找到需要的信息', {N1: [11, 13], N2: [12, 14], N3: [17], N4: [16], N5: [16]}],
+  ['shindai', '寝台列車', '听力', '夜行列车上戴上耳机，课题理解、要点理解、即时应答', {N1: [21, 22, 23, 24, 25], N2: [21, 22, 23, 24, 25], N3: [21, 22, 23, 24, 25], N4: [21, 22, 23, 24], N5: [21, 22, 23, 24]}],
+];
+function trains() {
+  $app.innerHTML = `<div style="--c:#c9a24a"><a class="back" href="#/">‹ 首页</a><h2>🚄 列车种别</h2>
+    <p style="color:var(--mute);font-size:13.5px">把所有真题里同一种题集中起来练。选一种列车、一个级别，每次随机发车 15 题。</p>
+    ${TRAINS.map(([id, n, k, desc, M]) => `<div class="tr"><div class="tr-img" style="background-image:url(img/train/${id}.jpg)"><b>${n}</b><span>${k}</span></div>
+      <p>${desc}</p><div class="tr-lv">${Object.keys(M).map(lv => `<a href="#/train/${id}/${lv}" style="--c:${LVC[lv]}">${lv}</a>`).join('')}</div></div>`).join('')}</div>`;
+}
+async function trainRun(id, lv) {
+  const T = TRAINS.find(t => t[0] === id); if (!T || !T[4][lv]) return trains();
+  $app.innerHTML = '<p style="text-align:center;margin-top:40px;color:var(--mute)">🚄 发车准备中…</p>';
+  const ids = (window.BANK || []).filter(b => b[0] === lv).map(b => b[0] + '_' + b[1]); const ms = T[4][lv];
+  const all = await Promise.all(ids.map(i => fetch('bank/' + i + '.json').then(r => r.json()).catch(() => null)));
+  const ps = {}, pool = [];
+  all.filter(Boolean).forEach(d => d.qs.filter(q => ms.includes(q.m)).forEach(q => { if (q.p) ps[d.sess + '/' + q.p] = d.ps[q.p];
+    pool.push({...q, p: q.p ? d.sess + '/' + q.p : null, src: d.sess}); }));
+  if (!pool.length) { $app.innerHTML = '<p style="text-align:center;margin-top:40px">这个级别还没有这类题</p>'; return; }
+  // 按文章成组抽，同一篇文章的题放在一起
+  const groups = {}; pool.forEach(q => (groups[q.p || q.src + q.n] = groups[q.p || q.src + q.n] || []).push(q));
+  const G = Object.values(groups).sort(() => Math.random() - .5), qs = [];
+  for (const g of G) { if (qs.length >= 15) break; qs.push(...g); }
+  qs.forEach((q, i) => { q.d = q.d || q.n; q.n = i + 1; });
+  const m0 = all.find(Boolean);
+  bankRun({lv, sess: T[1], mondai: m0 ? m0.mondai : {}, ps, qs, train: true}, false);
+}
 function arrive(l, s, right) {
   const st = right >= 10 ? 3 : right >= 9 ? 2 : right >= 8 ? 1 : 0, S = stars(), first = !S[s.no] && st;
   if (st > (S[s.no] || 0)) { S[s.no] = st; store.set('stars', S); store.set('pt', store.get('pt', 0) + st * 5); }
   const nx = l.st[l.st.indexOf(s) + 1], nl = LINES[LINES.indexOf(l) + 1];
   $app.innerHTML = `<div class="arrive" style="--c:${l.color}">
-    ${st ? `<div class="stamp${first ? ' new' : ''}"><span class="kana">${esc(mark(s))}</span><b>${esc(s.name)}駅</b><small>${esc(s.theme)} · ${new Date().getMonth() + 1}.${new Date().getDate()}</small></div>` : ''}
+    ${st ? `<div class="stamp${first ? ' new' : ''}${IMG(s.no) ? ' pic' : ''}" ${IMG(s.no) ? `style="background-image:url(img/st/${s.no}_s.jpg)"` : ''}><span class="kana">${esc(mark(s))}</span><b>${esc(s.name)}駅</b><small>${esc(s.theme)} · ${new Date().getMonth() + 1}.${new Date().getDate()}</small></div>` : ''}
     <h2>${st ? '到站了！' : '差一点点…'}</h2><div class="stars">${[1, 2, 3].map(k => `<i class="${k <= st ? 'on' : ''}">★</i>`).join('')}</div>
     <p style="color:var(--mute);font-size:14px">答对 ${right} / 10　${st ? `+${st * 5} 积分` : '答对 8 题才能到站'}</p>
     ${st && nx ? `<a class="btn go" href="#/s/${nx.no}">🚃 下一站：${esc(nx.name)}</a>` : ''}
@@ -421,15 +461,18 @@ function stampBook() {
   const S = stars();
   $app.innerHTML = `<a class="back" href="#/">‹ 路线图</a><h2>🎫 印章册</h2><p style="color:var(--mute);font-size:13.5px;margin-bottom:6px">每到一站盖一个章，集满一条线就毕业了。</p>` +
     LINES.filter(l => !l.off).map(l => `<h3><span class="badge" style="--c:${l.color};width:26px;height:26px;border-width:4px;font-size:11px">${l.code}</span>${l.name}　${l.st.filter(s => S[s.no]).length}/${l.st.length}</h3>
-    <div class="sbook" style="--c:${l.color}">${l.st.map(s => `<a href="#/s/${s.no}" class="stamp${S[s.no] ? '' : ' no'}"><span class="kana">${S[s.no] ? esc(mark(s)) : '?'}</span><b>${esc(s.name)}</b><small>${S[s.no] ? '★'.repeat(S[s.no]) : l.code + s.no.slice(-2)}</small></a>`).join('')}</div>`).join('');
+    <div class="sbook" style="--c:${l.color}">${l.st.map(s => `<a href="#/s/${s.no}" class="stamp${S[s.no] ? '' : ' no'}${S[s.no] && IMG(s.no) ? ' pic' : ''}" ${S[s.no] && IMG(s.no) ? `style="background-image:url(img/st/${s.no}_s.jpg)"` : ''}><span class="kana">${S[s.no] ? esc(mark(s)) : '?'}</span><b>${esc(s.name)}</b><small>${S[s.no] ? '★'.repeat(S[s.no]) : l.code + s.no.slice(-2)}</small></a>`).join('')}</div>`).join('');
 }
 function go() {
+  if (location.hash === '#map') { const m = document.getElementById('bigmap'); if (m) { m.scrollIntoView({behavior: 'smooth'}); return; } }
   au.pause(); const m = location.hash.match(/^#\/s\/(\w+)/);
   if (m) station(m[1]); else if (location.hash === '#/stamps') stampBook(); else if (location.hash === '#/wrong') wrongBook();
   else if (location.hash.startsWith('#/words')) wordList();
   else if (location.hash.startsWith('#/w/')) wordPage(decodeURIComponent(location.hash.slice(4)));
   else if (location.hash.startsWith('#/q/')) oneQ(...location.hash.slice(4).split('/'));
   else if (location.hash === '#/data') dashboard();
+  else if (location.hash === '#/trains') trains();
+  else if (location.hash.startsWith('#/train/')) trainRun(...location.hash.slice(8).split('/'));
   else if (location.hash.startsWith('#/grams')) gramList();
   else if (location.hash.startsWith('#/g/')) gramPage(decodeURIComponent(location.hash.slice(4)));
   else if (location.hash.startsWith('#/mine')) mine(location.hash.split('/')[2]);

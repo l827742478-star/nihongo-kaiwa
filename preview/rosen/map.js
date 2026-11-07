@@ -45,7 +45,7 @@ const MAP = (() => {
     const key = JSON.stringify(S); if (cache.key !== key) cache = {key, ...svg(lines, S)};
     const {g, lit, total} = cache;
     el.innerHTML = `<div class="mapwrap night jpmap" id="mw"><svg id="msv" viewBox="${HOME.join(' ')}" preserveAspectRatio="xMidYMid slice">${g}</svg>
-      <div class="mhead"><small>NIHONGO NO GINGA TETSUDŌ · JLPT 五十音 → N1</small><b>日本語の<em>銀河鉄道</em></b><span>从五十音出发，坐新干线一路开到 N1</span></div>
+      <div class="mhead"><small>ROUTE MAP · 東京から日本一周</small><b>銀河<em>路線図</em></b><span>点东京进入五十音環状線，学会的站会亮灯</span></div>
       <div class="mstat"><div><b>${lines.length}</b>条线路</div><div><b>${total}</b>个车站</div><div><b>${(lit / total * 100).toFixed(1)}%</b>已点亮</div></div>
       <div class="mtool"><button data-z="1.5">＋</button><button data-z="0.67">－</button><button data-z="0">⤢</button></div></div>`;
     const sv = el.querySelector('#msv'), mw = el.querySelector('#mw');
