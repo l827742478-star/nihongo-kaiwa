@@ -283,3 +283,27 @@ u.kw.w{border-bottom-color:#6ea9c8}
 .games-row i{font-style:normal;font-size:28px}
 .games-row b{font-size:14.5px;font-weight:900}
 .games-row small{font-size:11px;color:var(--mute);line-height:1.35}
+u.wd{text-decoration:none;cursor:pointer;border-radius:4px}
+u.wd:active,u.wd:hover{background:rgba(246,215,122,.55)}
+.pop-t{font-style:normal;font-size:12px;font-weight:800;color:#fff;background:#6ea9c8;border-radius:999px;padding:2px 10px}
+.tgl{position:absolute;right:0;top:0;display:flex;gap:6px}
+.tgl .furi{position:static}
+.rm{display:none;font-size:12.5px;color:var(--mute);letter-spacing:.2px;margin:2px 0 3px;font-family:-apple-system,"Helvetica Neue",sans-serif}
+body.roma .rm{display:block}
+.hideja .rm{display:none!important}
+/* 卡片复习 */
+.fav-btns{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:4px 0 18px}
+.fav-btns .fav-go{margin:0}
+.cd-top{display:flex;justify-content:space-between;font-size:13px;color:var(--mute);font-weight:700;margin-bottom:8px}
+.cd{min-height:260px;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;gap:12px;padding:26px 20px;cursor:pointer;margin:12px 0 14px}
+.cd .cd-f{display:flex;flex-direction:column;align-items:center;gap:12px}
+.cd .cd-f .ja{font-size:22px;font-weight:800;line-height:1.9}
+.cd .cd-b{display:none;border-top:1.5px dashed var(--line,#e6dccb);padding-top:12px;width:100%}
+.cd .cd-b .zh{font-size:17px;font-weight:700;color:var(--navy)}
+.cd.on .cd-b{display:block}.cd.on .cd-tip{display:none}
+.cd-tip{font-size:12.5px;color:var(--mute)}
+.cd-btns{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.cd-btns .btn{justify-content:center;font-size:16px;padding:14px}
+.cd-btns .btn:disabled{opacity:.4}
+.cd-end{text-align:center;padding:30px 20px;display:flex;flex-direction:column;gap:12px;align-items:center}
+.cd-big{font-size:54px}

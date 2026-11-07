@@ -10,8 +10,50 @@ let rate = store.get('rate', 1);
 const R = (o, k) => o[k + 'R'] ? esc(o[k + 'R']).replace(/\{([^|{}]+)\|([^{}]+)\}/g, '<ruby>$1<rt>$2</rt></ruby>') : esc(o[k]);
 const setFuri = on => { store.set('furi', on); document.body.classList.toggle('nofuri', !on); };
 setFuri(store.get('furi', true));
-const furiBtn = () => `<button class="furi${store.get('furi', true) ? ' on' : ''}" id="furi">あ 假名</button>`;
-const bindFuri = () => { const b = document.getElementById('furi'); if (b) b.onclick = () => { setFuri(!store.get('furi', true)); b.classList.toggle('on'); }; };
+const setRoma = on => { store.set('roma', on); document.body.classList.toggle('roma', on); };
+setRoma(store.get('roma', false));
+const furiBtn = () => `<span class="tgl"><button class="furi${store.get('roma', false) ? ' on' : ''}" id="roma">Ro 罗马音</button><button class="furi${store.get('furi', true) ? ' on' : ''}" id="furi">あ 假名</button></span>`;
+const bindFuri = () => { const b = document.getElementById('furi'), r = document.getElementById('roma');
+  if (b) b.onclick = () => { setFuri(!store.get('furi', true)); b.classList.toggle('on'); };
+  if (r) r.onclick = () => { setRoma(!store.get('roma', false)); r.classList.toggle('on'); }; };
+// 罗马音：读音来自假名注音，按词断开；助词 は/へ/を 读 wa/e/o
+const KR = (() => { const m = {}, A = 'あいうえおかきくけこさしすせそたちつてとなにぬねのはひふへほまみむめもやゆよらりるれろわをんがぎぐげござじずぜぞだぢづでどばびぶべぼぱぴぷぺぽぁぃぅぇぉゃゅょゎ',
+  B = 'a i u e o ka ki ku ke ko sa shi su se so ta chi tsu te to na ni nu ne no ha hi fu he ho ma mi mu me mo ya yu yo ra ri ru re ro wa o n ga gi gu ge go za ji zu ze zo da ji zu de do ba bi bu be bo pa pi pu pe po a i u e o ya yu yo wa'.split(' ');
+  [...A].forEach((c, i) => m[c] = B[i]); return m; })();
+function kana2ro(k) {
+  k = k.replace(/[ァ-ヶ]/g, c => String.fromCharCode(c.charCodeAt(0) - 96));
+  let o = '';
+  for (let i = 0; i < k.length; i++) {
+    const c = k[i], n = k[i + 1] === ' ' ? k[i + 2] : k[i + 1];
+    if (c === 'っ') { const r = KR[n] || ''; o += r === 'chi' || r.startsWith('ch') ? 't' : r[0] || ''; continue; }
+    if (c === 'ー') { o += o.slice(-1); continue; }
+    if ('ゃゅょ'.includes(n) && KR[c] && 'きしちにひみりぎじびぴ'.includes(c)) { const b = KR[c], y = KR[n];
+      o += (b === 'shi' || b === 'chi' || b === 'ji') ? b.slice(0, -1) + y.slice(1) : b.slice(0, -1) + y; i++; continue; }
+    if ('ぁぃぅぇぉ'.includes(n) && KR[c]) { o += KR[c].slice(0, -1) + KR[n]; i++; continue; }
+    o += KR[c] ?? (/[ぁ-ん]/.test(c) ? '' : c);
+  }
+  return o;
+}
+function RM(o) {
+  const U = [], src = o.jaR || o.ja, re = /\{([^|{}]+)\|([^{}]+)\}|([\s\S])/g; let m;
+  while ((m = re.exec(src))) U.push(m[1] ? {s: m[1], k: m[2]} : {s: m[3], k: m[3]});
+  const tok = []; let p = 0;
+  (WD.t[o.tk] || '').split(' ').forEach(x => { if (!x) return; const [len, w] = x.split('.'); tok.push({p, w: w === undefined ? null : WD.w[+w], k: ''}); p += +len; });
+  if (!tok.length) return '';
+  let pos = 0, ti = 0;
+  U.forEach(u => { while (ti + 1 < tok.length && tok[ti + 1].p <= pos) ti++; tok[ti].k += u.k; pos += u.s.length; });
+  const P = {'、': ',', '。': '.', '？': '?', '！': '!'};
+  let out = '';
+  tok.forEach((t, n) => { if (!t.k) return;
+    const W = t.w, prev = n ? tok[n - 1].w : null;
+    let k = t.k.replace(/[、。？！]/g, c => P[c]);
+    if (W && W[1] === '助词') { if (k === 'は') k = 'わ'; if (k === 'へ') k = 'え'; }
+    const glue = !out || !W || !/[ぁ-んァ-ヶa-zA-Z]/.test(k) || /^[,.?!…]/.test(k) || (prev && prev[1] === '前缀')
+      || (W[1] === '助动词' && !['です', 'だ'].includes(W[0])) || W[1] === '后缀' || (W[1] === '助词' && ['て', 'ば', 'たり'].includes(W[0]));
+    out += (glue ? '' : ' ') + k; });
+  return kana2ro(out).replace(/\s+([,.?!])/g, '$1').trim();
+}
+const RMh = o => { const r = RM(o); return r ? `<span class="rm">${esc(r)}</span>` : ''; };
 // 点词看讲解：会话「这段要注意」里的说法 + 本站词汇，句子里出现就标下划线
 function kwList(sc, d) {
   if (d.kw) return d.kw;
@@ -22,27 +64,39 @@ function kwList(sc, d) {
   sc.vocab.forEach(v => { if (v.w.length >= 2 && !/[〜～]/.test(v.w)) K.push({p: v.w, t: v.w, kana: v.kana, x: v.zh, a: v.a1}); });
   return d.kw = K;
 }
+// 每个词都能点：words.js 里每句的分词「长度.词号」，词号对应 WD.w = [原形, 词性, 中文, 读音]
+const WD = window.WD || {w: [], t: {}};
+D.forEach(s => s.dialogues.forEach((d, di) => d.lines.forEach((l, i) => { l.tk = s.no + '|' + di + '|' + i; })));
 function RK(o, K) {
-  if (!K || !K.length) return R(o, 'ja');
+  K = K || [];
   const U = [], src = o.jaR || o.ja, re = /\{([^|{}]+)\|([^{}]+)\}|([\s\S])/g; let m;
   while ((m = re.exec(src))) U.push(m[1] ? {s: m[1], h: `<ruby>${esc(m[1])}<rt>${esc(m[2])}</rt></ruby>`} : {s: m[3], h: esc(m[3])});
-  const plain = U.map(u => u.s).join(''), tag = new Array(plain.length).fill(-1);
+  const plain = U.map(u => u.s).join(''), tag = new Array(plain.length).fill('');
   K.forEach((k, i) => { let j = plain.indexOf(k.p);
-    while (j >= 0) { if (tag.slice(j, j + k.p.length).every(x => x < 0)) tag.fill(i, j, j + k.p.length); j = plain.indexOf(k.p, j + k.p.length); } });
-  let out = '', pos = 0, cur = -1;
+    while (j >= 0) { if (tag.slice(j, j + k.p.length).every(x => !x)) tag.fill('k' + i, j, j + k.p.length); j = plain.indexOf(k.p, j + k.p.length); } });
+  let at = 0;
+  (WD.t[o.tk] || '').split(' ').forEach((x, n) => { if (!x) return; const [len, w] = x.split('.');
+    if (w !== undefined) for (let j = at; j < at + +len; j++) if (!tag[j]) tag[j] = 'w' + w + '_' + n;
+    at += +len; });
+  let out = '', pos = 0, cur = '';
+  const open = t => t[0] === 'k' ? `<u class="kw${K[+t.slice(1)].a ? ' w' : ''}" data-k="${t.slice(1)}">` : `<u class="wd" data-w="${t.slice(1).split('_')[0]}">`;
   U.forEach(u => { const t = tag[pos]; pos += u.s.length;
-    if (t !== cur) { if (cur >= 0) out += '</u>'; if (t >= 0) out += `<u class="kw${K[t].a ? ' w' : ''}" data-k="${t}">`; cur = t; }
+    if (t !== cur) { if (cur) out += '</u>'; if (t) out += open(t); cur = t; }
     out += u.h; });
-  return out + (cur >= 0 ? '</u>' : '');
+  return out + (cur ? '</u>' : '');
 }
 function bindKw(root, K) {
   root.querySelectorAll('.kw[data-k]').forEach(u => u.onclick = e => { e.stopPropagation(); e.preventDefault(); showKw(K[+u.dataset.k]); });
+  root.querySelectorAll('.wd[data-w]').forEach(u => u.onclick = e => { e.stopPropagation(); e.preventDefault();
+    const [b, pz, zh, rd] = WD.w[+u.dataset.w], sf = u.textContent.replace(/\s/g, '');
+    const t = u.cloneNode(true); t.querySelectorAll('rt').forEach(r => r.remove()); const surf = t.textContent;
+    showKw({t: b, kana: rd, x: zh || '（这个词暂时没有讲解）', tag: pz, surf: surf !== b ? surf : ''}); });
 }
 function showKw(k) {
   let p = document.getElementById('pop');
   if (!p) { p = document.createElement('div'); p.id = 'pop'; document.body.appendChild(p); p.onclick = e => { if (e.target === p) p.classList.remove('on'); }; }
-  p.innerHTML = `<div class="pop-in"><div class="pop-h">${k.a ? pl(k.a) : ''}<b>${esc(k.t)}</b>${k.kana ? `<small>${esc(k.kana)}</small>` : ''}<span class="pop-x" role="button">×</span></div>
-    <p>${esc(k.x)}</p><small class="pop-f">${k.a ? '场景词汇' : '这段要注意'}</small></div>`;
+  p.innerHTML = `<div class="pop-in"><div class="pop-h">${k.a ? pl(k.a) : ''}<b>${esc(k.t)}</b>${k.kana ? `<small>${esc(k.kana)}</small>` : ''}${k.tag ? `<i class="pop-t">${k.tag}</i>` : ''}<span class="pop-x" role="button">×</span></div>
+    <p>${esc(k.x)}</p><small class="pop-f">${k.tag ? (k.surf ? `句子里是「${esc(k.surf)}」，原形是「${esc(k.t)}」` : '点句子里的任何一个词都能看') : k.a ? '场景词汇' : '这段要注意'}</small></div>`;
   p.querySelector('.pop-x').onclick = () => p.classList.remove('on');
   p.querySelectorAll('[data-a]').forEach(b => b.onclick = () => play(b.dataset.a));
   requestAnimationFrame(() => p.classList.add('on'));
@@ -126,6 +180,7 @@ function route() {
   const v = location.hash.match(/^#\/v\/(\d+)/);
   const vv = v && (window.VLOG || []).find(x => x.no === v[1]);
   if (vv) { vlogPage(vv); window.scrollTo(0, 0); return; }
+  if (location.hash === '#/fav/c') { cardPage(); window.scrollTo(0, 0); return; }
   if (location.hash.startsWith('#/fav')) { favPage(location.hash === '#/fav/p'); window.scrollTo(0, 0); return; }
   const m = location.hash.match(/^#\/s\/(\d+)(?:\/(\w+))?(?:\/(\d+))?/);
   const sc = m && D.find(s => s.no === m[1]);
@@ -244,8 +299,8 @@ function listenMode(M, d) {
       ${rateSeg()}</div>
     <div class="views">${[['both', '日语+中文'], ['ja', '只看日语'], ['zh', '只看中文'], ['none', '盲听']].map(([k, n]) => `<button class="${view === k ? 'on' : ''}" data-v="${k}">${n}</button>`).join('')}</div>
     <div class="chat ${view === 'zh' || view === 'none' ? 'hideja' : ''} ${view === 'ja' || view === 'none' ? 'hidezh' : ''}">
-    ${d.lines.map((l, i) => `<button class="ln${l.who === d.lines[0].who ? '' : ' r'}" data-i="${i}"><span class="who">${esc(l.who)}</span><span class="bub"><span class="ja">${RK(l, d.kw)}</span><span class="zh">${esc(l.zh)}</span></span>${d.fk ? star(d.fk + '|' + i) : ''}</button>`).join('')}</div>
-    ${d.kw && d.kw.length ? '<p class="kw-tip">句子里<u class="kw">带下划线</u>的词，点一下看讲解</p>' : ''}
+    ${d.lines.map((l, i) => `<button class="ln${l.who === d.lines[0].who ? '' : ' r'}" data-i="${i}"><span class="who">${esc(l.who)}</span><span class="bub"><span class="ja">${RK(l, d.kw)}</span>${RMh(l)}<span class="zh">${esc(l.zh)}</span></span>${d.fk ? star(d.fk + '|' + i) : ''}</button>`).join('')}</div>
+    <p class="kw-tip">点句子里的<b>任何一个词</b>都能看讲解，<u class="kw">带下划线</u>的是这段要注意的说法</p>
     ${d.notes.length ? `<div class="notes"><h3>这段要注意</h3><ul>${d.notes.map(n => `<li>${esc(n)}</li>`).join('')}</ul></div>` : ''}`;
     const lns = M.querySelectorAll('.ln');
     const mark = i => { lns.forEach((x, j) => x.classList.toggle('cur', j === i)); sub(d, i, view === 'none'); };
@@ -324,7 +379,7 @@ function drill(M, d, dict) {
       <div class="steps">${d.lines.map((_, j) => `<i class="${j === i ? 'on' : j < i ? 'past' : ''}"></i>`).join('')}</div>
       <div class="who-tag">${esc(l.who)}${d.fk ? star(d.fk + '|' + i) : l.fk ? star(l.fk) : ''}</div>
       ${dict ? `<textarea id="ta" rows="3" placeholder="听完把这句写下来，汉字、假名都可以"></textarea><div id="res"></div>`
-             : `<div class="line"><div class="ja">${RK(l, d.kw)}</div><div class="zh">${esc(l.zh)}</div></div>`}
+             : `<div class="line"><div class="ja">${RK(l, d.kw)}</div>${RMh(l)}<div class="zh">${esc(l.zh)}</div></div>`}
       <div class="pad">${dict
         ? `<button class="key" id="slow"><span>${ic('slow')}</span>慢放</button>
            <button class="key big blue" id="o"><span>${ic('play', 28)}</span>播放</button>
@@ -450,7 +505,7 @@ function favPage(practice) {
   }
   if (!F.length) h += `<p class="intro">还没有收藏。学的时候看到想记住的句子、单词，点旁边的 ☆ 就会存到这里。</p>`;
   else {
-    if (S.length) h += `<a class="btn primary fav-go" href="#/fav/p">${ic('mic', 16)}把收藏的 ${S.length} 句拿来跟读</a>`;
+    h += `<div class="fav-btns"><a class="btn primary fav-go" href="#/fav/c">🃏 卡片复习 ${F.length} 个</a>${S.length ? `<a class="btn primary fav-go" href="#/fav/p">${ic('mic', 16)}拿 ${S.length} 句来跟读</a>` : ''}</div>`;
     [['d', '会话句子'], ['x', '日本人怎么说'], ['l', '听不懂的日语'], ['v', '场景词汇']].forEach(([t, n]) => {
       const L = F.filter(x => x.t === t); if (!L.length) return;
       h += `<h3 class="fav-h">${n}<span>${L.length}</span></h3>` + L.map(x => `<article class="card fav">${star(x.k)}
@@ -463,6 +518,40 @@ function favPage(practice) {
   F.forEach(x => fetchA(x.a).catch(() => {}));
   bindPl($app);
   $app.querySelectorAll('.fav [data-f]').forEach(b => b.addEventListener('click', () => setTimeout(route, 250)));
+}
+
+// ---------- 卡片复习：正面日语，点一下翻到中文；没记住的下一轮再出 ----------
+function cardPage() {
+  const F = favs().map(favItem).filter(Boolean);
+  if (!F.length) { location.hash = '#/fav'; return; }
+  const ok = new Set(store.get('card_ok', []));
+  let Q = [...F.filter(x => !ok.has(x.k)), ...F.filter(x => ok.has(x.k))], i = 0, got = 0, miss = [];
+  const head = `<div class="scene" style="--c:#e3a948"><a class="back" href="#/fav">${ic('left', 16)}我的收藏</a>
+    <div class="sh">${furiBtn()}<small>随时复习</small><h2>卡片复习</h2></div><div id="cd"></div></div>`;
+  $app.innerHTML = head; bindFuri();
+  const B = document.getElementById('cd');
+  const draw = () => {
+    if (i >= Q.length) {
+      B.innerHTML = `<div class="card cd-end"><div class="cd-big">${miss.length ? '💪' : '🎉'}</div><b>这一轮：记住 ${got} 个，没记住 ${miss.length} 个</b>
+        ${miss.length ? `<button class="btn primary" id="again">再看一遍没记住的 ${miss.length} 个</button>` : ''}<a class="btn" href="#/fav">回到我的收藏</a></div>`;
+      const a = document.getElementById('again'); if (a) a.onclick = () => { Q = miss; miss = []; got = 0; i = 0; draw(); };
+      return;
+    }
+    const x = Q[i];
+    B.innerHTML = `<div class="cd-top"><span>第 ${i + 1} 张，共 ${Q.length} 张</span><span>${x.t === 'v' ? '场景词汇' : x.t === 'x' ? '日本人怎么说' : x.t === 'l' ? '听不懂的日语' : '会话句子'}</span></div>
+      <div class="steps">${Q.map((_, j) => `<i class="${j === i ? 'on' : j < i ? 'past' : ''}"></i>`).join('')}</div>
+      <div class="card cd" id="flip"><div class="cd-f"><div class="ja">${x.ja}</div>${pl(x.a)}</div>
+        <div class="cd-b"><div class="zh">${esc(x.zh)}</div>${x.ex ? `<div class="ja s">${R(x.ex, 'ex')}</div><div class="zh">${esc(x.ex.exzh)}</div>` : ''}
+        <small class="from">第 ${+x.sc.no} 站 · ${esc(x.sc.name)}</small></div><p class="cd-tip">先想一想意思，再点卡片翻过来</p></div>
+      <div class="cd-btns"><button class="btn" id="no" disabled>😵 没记住</button><button class="btn primary" id="yes" disabled>😊 记住了</button></div>`;
+    const c = document.getElementById('flip');
+    c.onclick = e => { if (e.target.closest('[data-a]')) return; c.classList.add('on'); document.getElementById('no').disabled = document.getElementById('yes').disabled = false; };
+    bindPl(B); play(x.a);
+    const mark = y => { y ? (ok.add(x.k), got++) : (ok.delete(x.k), miss.push(x)); store.set('card_ok', [...ok]); i++; draw(); };
+    document.getElementById('yes').onclick = () => mark(true);
+    document.getElementById('no').onclick = () => mark(false);
+  };
+  draw();
 }
 
 route();
