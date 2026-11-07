@@ -156,11 +156,11 @@ function home() {
       <span class="next-txt"><small>收藏的句子和单词，随时复习</small><b>我的收藏　${favs().length} 条</b></span>
       <span class="next-go">${ic('right', 18)}</span>
     </a>
-    <a class="next" href="game/" style="--c:#e8857a;margin-top:14px">
-      <span class="next-pic" style="display:flex;align-items:center;justify-content:center;font-size:34px;background:#fbe3e1">🏪</span>
-      <span class="next-txt"><small>🎁 赠送 · 学完来实战</small><b>便利店模拟小游戏</b></span>
-      <span class="next-go">${ic('right', 18)}</span>
-    </a>
+    <div class="games"><div class="games-h">🎁 赠送 3 个小游戏<small>学累了来玩一局</small></div><div class="games-row">
+      <a href="game/" style="--g:#fbe3e1"><i>🏪</i><b>便利店模拟</b><small>当店员，顾客只说日语</small></a>
+      <a href="game/kuiz.html" style="--g:#dceaf2"><i>⚡</i><b>听力抢答</b><small>8 秒听出意思</small></a>
+      <a href="game/pin.html" style="--g:#dcefd8"><i>🧩</i><b>拼句子</b><small>拼出日本人的说法</small></a>
+    </div></div>
   </section><div class="route">`;
   let g = '';
   D.forEach(s => {

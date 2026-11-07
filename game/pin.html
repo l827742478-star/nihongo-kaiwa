@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="zh"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<title>拼句子</title>
+<style>
+:root{--bg:#f8f2e6;--ink:#3b3330;--sub:#8a7f74;--card:#fffdf8;--line:#3b3330;--brand:#7fb27a;--brand2:#5f9a5a;--red:#e8857a;--grn:#7fb27a;--yel:#f7d77a;--track:#ece3d3}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{background:var(--bg);color:var(--ink);font-family:"PingFang SC","Hiragino Sans GB","Noto Sans SC",sans-serif;min-height:100vh;user-select:none;-webkit-user-select:none}
+.app{max-width:480px;margin:0 auto;padding:10px 16px 24px}
+.jp{font-family:"Hiragino Maru Gothic ProN","Hiragino Sans","Noto Sans JP",sans-serif}
+rt{font-size:.5em;color:var(--sub)}
+a.back{font-size:14px;color:var(--sub);text-decoration:none}
+h1{font-size:34px;font-weight:900;margin:18px 0 10px}h1 span{color:var(--brand)}
+.lead{font-size:15px;line-height:1.75;margin-bottom:14px}
+.box{background:var(--card);border:3px solid var(--line);border-radius:18px;padding:14px 16px;margin-bottom:14px;font-size:14.5px;line-height:1.8}
+.go{display:block;width:100%;border:0;border-radius:18px;background:var(--brand);color:#fff;font:inherit;font-size:20px;font-weight:900;padding:16px;box-shadow:0 5px 0 var(--brand2);cursor:pointer}
+.go:active{transform:translateY(3px);box-shadow:0 2px 0 var(--brand2)}
+.hud{display:flex;justify-content:space-between;align-items:center;font-weight:800;font-size:15px;background:var(--brand);color:#fff;border-radius:14px;padding:9px 14px}
+.timer{height:10px;background:var(--track);border-radius:9px;margin:12px 0 4px;overflow:hidden}.timer i{display:block;height:100%;width:100%;background:var(--yel);border-radius:9px}
+.stage{background:var(--card);border:3px solid var(--line);border-radius:22px;padding:22px 16px;text-align:center;margin:10px 0 14px;min-height:170px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px}
+.spk{width:84px;height:84px;border-radius:50%;border:0;background:#dceaf2;font-size:38px;cursor:pointer}
+.spk.on{animation:pulse .8s infinite}@keyframes pulse{50%{transform:scale(1.08)}}
+.again{font-size:13px;color:var(--sub);border:0;background:none;font:inherit;cursor:pointer;text-decoration:underline}
+.ans{font-size:19px;line-height:1.9;font-weight:700}
+.opts{display:grid;gap:10px}
+.opt{border:3px solid var(--line);border-radius:16px;background:var(--card);font:inherit;font-size:16px;font-weight:700;padding:13px 14px;text-align:left;box-shadow:0 4px 0 var(--line);cursor:pointer;color:var(--ink)}
+.opt:active{transform:translateY(2px);box-shadow:0 2px 0 var(--line)}
+.opt.ok{background:#dcefd8;border-color:var(--grn);box-shadow:0 4px 0 var(--grn)}.opt.no{background:#fbe2dc;border-color:var(--red);box-shadow:0 4px 0 var(--red)}
+.combo{font-size:13px;font-weight:900;color:var(--red);height:18px;text-align:center;margin-top:6px}
+.big{font-size:64px;text-align:center;margin-top:18px}.score{text-align:center;font-size:40px;font-weight:900}.score small{font-size:16px;color:var(--sub);display:block;font-weight:700}
+.miss{margin:16px 0}.miss h3{font-size:16px;margin-bottom:8px}
+.mi{display:flex;gap:10px;align-items:flex-start;background:var(--card);border-radius:14px;padding:10px 12px;margin-bottom:8px;border:2px solid var(--track)}
+.mi button{flex:none;width:34px;height:34px;border-radius:50%;border:0;background:#dceaf2;font-size:15px;cursor:pointer}
+.mi .jp{font-size:16px;font-weight:700;line-height:1.8}.mi small{display:block;color:var(--sub);font-size:13px}
+.cr{margin:24px auto 0;padding:12px 14px;border:1.5px dashed #d9cdb8;border-radius:12px;text-align:center;font-size:12px;line-height:1.7;color:var(--sub)}.cr b{display:block;color:#cf6c61;font-size:14px}
+.shake{animation:shake .35s}@keyframes shake{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+.prompt{font-size:18px;font-weight:800;line-height:1.6}
+.prompt small{display:block;font-size:12.5px;color:var(--sub);font-weight:600;margin-bottom:4px}
+.slot{min-height:64px;border:3px dashed #cbbfa9;border-radius:16px;padding:10px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:14px;background:#fffdf8}
+.slot.ok{border:3px solid var(--grn);background:#eef7ec}.slot.no{border:3px solid var(--red);background:#fdf0ed}
+.pool{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;min-height:60px}
+.ch{border:3px solid var(--line);border-radius:12px;background:var(--card);font-family:"Hiragino Maru Gothic ProN","Hiragino Sans","Noto Sans JP",sans-serif;font-size:18px;font-weight:700;padding:8px 12px;box-shadow:0 4px 0 var(--line);cursor:pointer;color:var(--ink)}
+.slot .ch{background:#fff6c9;box-shadow:0 3px 0 var(--line);font-size:17px;padding:6px 10px}
+.ch.used{visibility:hidden}
+.tools{display:flex;gap:10px;margin:16px 0 10px}.tools button{flex:1;border:2px solid var(--track);background:var(--card);border-radius:14px;font:inherit;font-size:14px;font-weight:700;padding:10px;cursor:pointer;color:var(--ink)}
+.tools small{color:var(--sub);font-weight:600}
+.res{text-align:center;margin:6px 0 12px}.res .jp{font-size:19px;font-weight:700;line-height:1.9}
+</style></head><body><div class="app" id="app"></div>
+<div class="cr"><b>©️ 已完成数字版权登记 · 侵权必究</b>仅限购买者本人学习使用，禁止转发链接、截图外传、二次售卖</div>
+<script src="pin.js"></script>
+<script>
+const $=id=>document.getElementById(id), app=$('app'), au=new Audio();
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const R=(r,p)=>r?esc(r).replace(/\{([^|{}]+)\|([^{}]+)\}/g,'<ruby>$1<rt>$2</rt></ruby>'):esc(p);
+const best=()=>{try{return+localStorage.getItem('pin_best')||0}catch(e){return 0}};
+const say=a=>{au.src='../audio/'+a+'.mp3';au.play().catch(()=>{})};
+function beep(f,d){try{const c=window._ac||(window._ac=new(window.AudioContext||window.webkitAudioContext)()),o=c.createOscillator(),g=c.createGain();o.frequency.value=f;o.connect(g);g.connect(c.destination);g.gain.value=.07;o.start();o.stop(c.currentTime+d)}catch(e){}}
+const N=10;let Q,k,score,miss,q,pick,order,used,tries;
+function start(){app.innerHTML=`<a class="back" href="../">← 返回全部场景</a><h1>拼<span>句子</span> 🧩</h1>
+<p class="lead">看中文，把打乱的日语块按顺序点出来，<br>拼出<b>日本人真正会说的那句话</b>。</p>
+<div class="box">🧩 一局 ${N} 题，题目来自「日本人怎么说」和会话原句<br>🔊 卡住了可以「听一下」或者「提示」，但分数会少一点<br>✅ 拼对了会播放原声，跟着念一遍</div>
+<button class="go" onclick="play()">开始 🧩</button><p style="text-align:center;margin-top:12px;font-size:13px;color:var(--sub)">最高分 ${best()}</p>`}
+function play(){Q=[...PIN].sort(()=>Math.random()-.5).slice(0,N);k=-1;score=0;miss=[];next()}
+function next(){k++;if(k>=N)return end();q=Q[k];pick=[];used=new Set();tries=0;q.bonus=10;
+  order=q.c.map((c,i)=>i);do order.sort(()=>Math.random()-.5);while(order.every((v,i)=>v===i));
+  new Audio('../audio/'+q.a+'.mp3').preload='auto';draw()}
+function draw(){const done=pick.length===q.c.length;
+  app.innerHTML=`<div class="hud"><span>🧩 第 ${k+1} / ${N} 题</span><span>⭐ ${score}</span></div>
+  <div class="stage" style="min-height:0;align-items:flex-start;text-align:left"><div class="prompt"><small>${q.k==='x'?'日本人会怎么说？':'这句日语怎么说？'}　·　第 ${+q.s} 站 ${esc(q.n)}</small>${esc(q.q)}</div></div>
+  <div class="slot" id="slot">${pick.map((i,j)=>`<button class="ch" data-p="${j}">${esc(q.c[i])}</button>`).join('')}</div>
+  <div class="pool">${order.map(i=>`<button class="ch${used.has(i)?' used':''}" data-i="${i}">${esc(q.c[i])}</button>`).join('')}</div>
+  <div class="tools"><button id="lis">🔊 听一下 <small>-3</small></button><button id="hint">💡 提示 <small>-3</small></button><button id="clr">↺ 重来</button></div>`;
+  document.querySelectorAll('.pool .ch').forEach(b=>b.onclick=()=>{const i=+b.dataset.i;if(used.has(i))return;pick.push(i);used.add(i);beep(700,.04);pick.length===q.c.length?check():draw()});
+  document.querySelectorAll('.slot .ch').forEach(b=>b.onclick=()=>{const j=+b.dataset.p;used.delete(pick[j]);pick.splice(j,1);draw()});
+  $('lis').onclick=()=>{say(q.a);if(!q.heard){q.heard=1;q.bonus=Math.max(2,q.bonus-3)}};
+  $('hint').onclick=()=>{let j=0;while(j<pick.length&&q.c[pick[j]]===q.c[j])j++;pick=pick.slice(0,j);used=new Set(pick);
+    const i=q.c.findIndex((c,x)=>!used.has(x)&&c===q.c[j]);pick.push(i);used.add(i);q.bonus=Math.max(2,q.bonus-3);pick.length===q.c.length?check():draw()};
+  $('clr').onclick=()=>{pick=[];used=new Set();draw()}}
+function check(){const ok=pick.map(i=>q.c[i]).join('')===q.c.join('');draw();const sl=$('slot');
+  if(ok){sl.classList.add('ok');score+=q.bonus;beep(1500,.1);say(q.a);
+    document.querySelector('.pool').outerHTML=`<div class="res"><div class="jp">${R(q.r,q.ja)}</div><small style="color:var(--grn);font-weight:800">${q.bonus?`⭕ 拼对了！+${q.bonus}`:'正确的顺序是这样'}　跟着原声念一遍</small></div>`;
+    document.querySelector('.tools').innerHTML=`<button id="lis">🔊 再听</button><button class="go" id="nx" style="flex:2;font-size:17px;padding:10px">${k<N-1?'下一题 ➜':'看结果 🏁'}</button>`;
+    $('lis').onclick=()=>say(q.a);$('nx').onclick=next}
+  else{tries++;sl.classList.add('no','shake');beep(260,.18);q.bonus=Math.max(2,q.bonus-2);
+    if(tries>=2){if(!miss.includes(q))miss.push(q);pick=q.c.map((c,i)=>i);used=new Set(pick);q.bonus=0;setTimeout(check,900)}
+    else setTimeout(()=>{pick=[];used=new Set();draw()},900)}}
+function end(){const b=Math.max(best(),score);try{localStorage.setItem('pin_best',b)}catch(e){}
+  const r=score>=90?['🏆','语感满分']:score>=65?['👍','很像日本人了']:score>=40?['😊','有感觉了']:['💪','多拼几局就顺了'];
+  app.innerHTML=`<div class="big">${r[0]}</div><div class="score">${score}<small>${r[1]}　·　满分 ${N*10}　·　最高分 ${b}</small></div>
+  ${miss.length?`<div class="miss"><h3>这几句再看看</h3>${miss.map(m=>`<div class="mi"><button data-a="${m.a}">▶</button><div><div class="jp">${R(m.r,m.ja)}</div><small>${esc(m.q)}　·　第 ${+m.s} 站</small></div></div>`).join('')}</div>`:''}
+  <button class="go" onclick="play()">再来一局 🔁</button><p style="text-align:center;margin-top:14px"><a class="back" href="../">← 返回全部场景</a></p>`;
+  document.querySelectorAll('.mi button').forEach(b=>b.onclick=()=>say(b.dataset.a));scrollTo(0,0)}
+start();
+</script></body></html>
