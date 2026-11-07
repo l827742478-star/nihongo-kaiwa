@@ -64,7 +64,8 @@ function route(l) {
 }
 function home() {
   const B = window.BANK || [];
-  $app.innerHTML = `<div id="bigmap"></div>` + icCard() + timetable() + `<a class="bk-entry" href="#/bank"><span>📚</span><div><b>真题库</b><small>${B.length} 套历年真题 · ${B.reduce((a, b) => a + b[2], 0)} 题 · 每题中文解析</small></div><i>›</i></a>` + `<h3>🚉 各条线路 <small style="font-size:12px;color:var(--mute);font-weight:600">每到一站盖一个章</small></h3>` + LINES.map(route).join('');
+  $app.innerHTML = `<div id="bigmap"></div>` + icCard() + timetable() + `<div class="kb"><a href="#/bank"><span>📚</span><b>真题库</b><small>${B.length} 套 · ${B.reduce((a, b) => a + b[2], 0)} 题</small></a><a href="#/words"><span>✦</span><b>单词星系</b><small>${(window.WORDS || []).length} 词 · 连真题原句</small></a>
+    <a href="#/data"><span>📊</span><b>数据看板</b><small>高频词 · 考点</small></a><a href="#/wrong"><span>📕</span><b>错题本</b><small>做错自动收录</small></a></div>` + `<h3>🚉 各条线路 <small style="font-size:12px;color:var(--mute);font-weight:600">每到一站盖一个章</small></h3>` + LINES.map(route).join('');
   MAP.mount(document.getElementById('bigmap'), LINES, stars());
   const ic = document.getElementById('ic');
   ic.onclick = () => { ic.classList.remove('pi'); void ic.offsetWidth; ic.classList.add('pi'); PI();
@@ -277,7 +278,7 @@ function bankRun(d, strict) {
       if (strict) { ans[q.n] = j; $app.querySelectorAll('.opt').forEach(x => x.classList.toggle('sel', +x.dataset.j === j)); return; }
       if (ans[q.n] !== undefined) return; ans[q.n] = j; record(q, j); j === q.a ? OK() : NG();
       $app.querySelector('.ex-o').innerHTML = optsHtml(q, true, j);
-      document.getElementById('why').innerHTML = whyHtml(q, j) + `<button class="btn go" id="nx">${i + 1 < Q.length ? '下一题 ›' : '看成绩'}</button>`;
+      document.getElementById('why').innerHTML = whyHtml(q, j) + kNodes(q) + `<button class="btn go" id="nx">${i + 1 < Q.length ? '下一题 ›' : '看成绩'}</button>`;
       document.getElementById('nx').onclick = () => { i++; draw(); scrollTo(0, 0); }; });
   };
   const confirm2 = () => { toast(`还有 ${Q.length - Object.keys(ans).length} 题没做，再点一次「交卷」就交`); const k = confirm2.k; confirm2.k = true; return k; };
@@ -288,9 +289,67 @@ function bankRun(d, strict) {
     $app.innerHTML = `<div style="--c:${c}"><a class="back" href="#/bank/${d.lv}">‹ 真题库</a><div class="card ex-intro"><div style="font-size:44px">${r / Q.length >= .6 ? '🎉' : '💪'}</div>
       <h2>${r} / ${Q.length}（${Math.round(r / Q.length * 100)}%）</h2><p>${d.sess.replace('.', '年')}月 ${d.lv}${strict ? ` · 用时 ${min} 分钟` : ''}</p>
       <div class="ex-box">${ms.map(m => { const qs = Q.filter(q => q.m === m), ok = qs.filter(q => ans[q.n] === q.a).length; return `<span>問題${m} ${esc(d.mondai[m] || '')}　${ok}/${qs.length}</span>`; }).join('')}</div></div>
-      ${strict ? `<h3>逐题解析</h3>` + Q.map(q => `<div class="gm"><div class="jp" style="font-weight:700">${q.n}. ${U(q.q)}</div><div style="font-size:13px;color:var(--mute);margin:4px 0">你选：${ans[q.n] === undefined ? '没做' : ans[q.n] + 1}</div>${whyHtml(q, ans[q.n])}</div>`).join('') : ''}
+      ${strict ? `<h3>逐题解析</h3>` + Q.map(q => `<div class="gm"><div class="jp" style="font-weight:700">${q.n}. ${U(q.q)}</div><div style="font-size:13px;color:var(--mute);margin:4px 0">你选：${ans[q.n] === undefined ? '没做' : ans[q.n] + 1}</div>${whyHtml(q, ans[q.n])}${kNodes(q)}</div>`).join('') : ''}
       <a class="btn go" href="#/wrong">📕 错题本</a><a class="btn" href="#/bank/${d.lv}">回到真题库</a></div>`; scrollTo(0, 0); };
   draw();
+}
+// ---------- 单词星系：每个词连到真题原句 ----------
+const say = t => { try { const u = new SpeechSynthesisUtterance(t); u.lang = 'ja-JP'; u.rate = .9; speechSynthesis.cancel(); speechSynthesis.speak(u); } catch (e) {} };
+const known = () => new Set(store.get('known', []));
+const sessName = s => s.replace('.', '年') + '月';
+function wordList(lv, sort, kw, page) {
+  const W = window.WORDS || [], K = known(); lv = lv || '全部'; sort = sort || 'cnt';
+  let L = W.filter(r => (lv === '全部' || r[3] === lv) && (!kw || r[0].includes(kw) || r[1].includes(kw) || r[2].includes(kw)));
+  if (sort === 'kao') L = [...L].sort((a, b) => b[5] - a[5] || b[4] - a[4]);
+  const n = (page || 1) * 60, hide = store.get('hide', '');
+  $app.innerHTML = `<div style="--c:#c9a24a"><a class="back" href="#/">‹ 首页</a><h2>✦ 单词星系</h2>
+    <p style="color:var(--mute);font-size:13.5px">N5–N1 共 ${W.length} 个词，${W.filter(r => r[4]).length} 个在真题里出现过，${W.filter(r => r[5]).length} 个直接当考点考过。点进去看它出现过的每一句真题。</p>
+    <div class="wl-hide"><b>一键遮挡</b><button data-h="ja" class="${hide === 'ja' ? 'on' : ''}">遮挡日文</button><button data-h="zh" class="${hide === 'zh' ? 'on' : ''}">遮挡中文</button></div>
+    <input id="kw" class="wl-kw" placeholder="搜索单词 / 读音 / 中文" value="${esc(kw || '')}">
+    <div class="wl-f">${['全部', 'N1', 'N2', 'N3', 'N4', 'N5'].map(x => `<button data-lv="${x}" class="${x === lv ? 'on' : ''}">${x}</button>`).join('')}
+      <select id="so"><option value="cnt" ${sort === 'cnt' ? 'selected' : ''}>按出现次数</option><option value="kao" ${sort === 'kao' ? 'selected' : ''}>按考点次数</option></select></div>
+    <p class="wl-n">${L.length} 个词</p>
+    <div class="wl ${hide ? 'hide-' + hide : ''}">${L.slice(0, n).map(r => `<a class="wl-r" href="#/w/${encodeURIComponent(r[0])}"><span class="wl-w"><b class="jp">${esc(r[0])}</b><small>${esc(r[1])}</small></span><span class="wl-zh">${esc(r[2])}</span>
+      <span class="wl-s"><em class="lv">${r[3]}</em>${r[4] ? `出现 ${r[4]} 次` : '真题未出现'}${r[5] ? ` · 考点 ${r[5]} 次` : ''}</span>${K.has(r[0]) ? '<i class="wl-k">✓</i>' : ''}</a>`).join('')}</div>
+    ${L.length > n ? `<button class="btn" id="more">再看 60 个</button>` : ''}</div>`;
+  const go2 = (a = lv, b = sort, c = kw, d = 1) => wordList(a, b, c, d);
+  $app.querySelectorAll('[data-lv]').forEach(b => b.onclick = () => go2(b.dataset.lv));
+  $app.querySelectorAll('[data-h]').forEach(b => b.onclick = () => { store.set('hide', hide === b.dataset.h ? '' : b.dataset.h); go2(); });
+  document.getElementById('so').onchange = e => go2(lv, e.target.value);
+  const k = document.getElementById('kw'); k.onchange = () => go2(lv, sort, k.value.trim());
+  const m = document.getElementById('more'); if (m) m.onclick = () => { const y = scrollY; go2(lv, sort, kw, (page || 1) + 1); scrollTo(0, y); };
+}
+async function wordPage(w) {
+  const r = (window.WORDS || []).find(x => x[0] === w); if (!r) return wordList();
+  let C = []; try { C = ((await (await fetch(`nodes/ctx_${r[3]}.json`)).json())[w]) || []; } catch (e) {}
+  const K = known(), hl = t => esc(t).replace(new RegExp(esc(w.split('/')[0]).replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'), m => `<mark>${m}</mark>`);
+  $app.innerHTML = `<div style="--c:#c9a24a"><a class="back" href="#/words">‹ 单词星系</a>
+    <div class="wn"><div class="wn-h"><span>✦</span><div><small>WORD NODE</small><b>单词详情</b></div><em>${r[3]}</em></div>
+      <div class="wn-w jp">${esc(r[0])}</div><div class="wn-r">${esc(r[1])}</div>
+      <div class="wn-zh"><small>中文释义</small>${esc(r[2])}</div>
+      <div class="wn-b"><button id="sp">🔊 听发音</button><button id="kn" class="${K.has(w) ? 'on' : ''}">${K.has(w) ? '✓ 已掌握' : '☐ 已掌握'}</button></div>
+      <div class="wn-g"><div><small>累计出现</small><b>${r[4]} 次</b></div><div><small>作为考点</small><b>${r[5]} 次</b></div><div><small>首次</small><b>${r[6] ? sessName(r[6]) : '—'}</b></div><div><small>最近</small><b>${r[7] ? sessName(r[7]) : '—'}</b></div></div></div>
+    <h3>① 真题原文语境 <small style="font-size:12px;color:var(--mute);font-weight:600">${C.length ? `最近的 ${C.length} 句` : '真题里还没出现过'}</small></h3>
+    ${C.map(([sid, n, m, kind, t]) => `<div class="wc"><small>${sid.split('_')[0]} · ${sessName(sid.split('_')[1])} · 問題${m} · 第${n}题${kind === 'p' ? ' · 文章' : kind === 'o' ? ' · 选项' : ''}</small><div class="jp">${hl(t)}</div><a href="#/q/${sid}/${n}">独立做题 ›</a></div>`).join('')}
+    <h3>② 所属级别</h3><a class="wc-tag" href="#/words">${r[3]} 单词星系</a></div>`;
+  document.getElementById('sp').onclick = () => say(r[1] || r[0]);
+  document.getElementById('kn').onclick = () => { const k = known(); k.has(w) ? k.delete(w) : k.add(w); store.set('known', [...k]); wordPage(w); };
+}
+async function oneQ(id, n) {
+  const d = await bankLoad(id); if (!d) return; const i = d.qs.findIndex(q => q.n === +n); if (i < 0) return bankIntro(id);
+  bankRun({...d, qs: [d.qs[i]]}, false);
+}
+const kNodes = q => q.k && q.k.length ? `<div class="kn"><small>本题知识节点 · 点击查看</small>${q.k.map(w => `<a href="#/w/${encodeURIComponent(w)}">词 · ${esc(w)}</a>`).join('')}</div>` : '';
+// ---------- 数据看板 ----------
+function dashboard() {
+  const W = window.WORDS || [], B = window.BANK || [], STOP = new Set(['こと', 'もの', 'ため', 'よう', 'とき', 'ところ', 'わけ', 'はず', '思う', '考える', '言う', '人間', '自分', '社会', '必要', '筆者', '問題', '場合', 'いく', 'さん', '良い', '一部']),
+    top = W.filter(r => (r[3] === 'N1' || r[3] === 'N2') && r[0].length > 1 && !STOP.has(r[0])).sort((a, b) => b[8] - a[8] || b[4] - a[4]).slice(0, 15), kt = [...W].sort((a, b) => b[5] - a[5]).slice(0, 15);
+  const bar = (L, f, c) => { const mx = Math.max(...L.map(f)); return L.map(r => `<a class="db-r" href="#/w/${encodeURIComponent(r[0])}"><span class="jp">${esc(r[0])}</span><i style="width:${f(r) / mx * 100}%;background:${c}"></i><b>${f(r)}</b></a>`).join(''); };
+  $app.innerHTML = `<div style="--c:#5f8fd0"><a class="back" href="#/">‹ 首页</a><h2>📊 考点数据看板</h2>
+    <div class="db-k"><div><b>${B.length}</b>套真题</div><div><b>${B.reduce((a, b) => a + b[2], 0)}</b>道题</div><div><b>${W.length}</b>个词</div><div><b>${W.filter(r => r[4]).length}</b>个真题词</div><div><b>${W.filter(r => r[5]).length}</b>个考点词</div></div>
+    <div class="card db"><h3>🔥 N1・N2 高频词（按在几场真题里出现过）</h3>${bar(top, r => r[8], '#7fc79a')}</div>
+    <div class="card db"><h3>🎯 直接考过的词（N1 文字词汇，按考过的次数）</h3>${bar(kt, r => r[5], '#f2c45a')}</div>
+    <div class="card db"><h3>📚 各级别真题</h3>${['N1', 'N2', 'N3', 'N4', 'N5'].map(l => { const x = B.filter(b => b[0] === l); return `<div class="db-l"><b>${l}</b><span>${x.length} 套 · ${x.reduce((a, b) => a + b[2], 0)} 题</span></div>`; }).join('')}</div></div>`;
 }
 function arrive(l, s, right) {
   const st = right >= 10 ? 3 : right >= 9 ? 2 : right >= 8 ? 1 : 0, S = stars(), first = !S[s.no] && st;
@@ -315,6 +374,10 @@ function stampBook() {
 function go() {
   au.pause(); const m = location.hash.match(/^#\/s\/(\w+)/);
   if (m) station(m[1]); else if (location.hash === '#/stamps') stampBook(); else if (location.hash === '#/wrong') wrongBook();
+  else if (location.hash.startsWith('#/words')) wordList();
+  else if (location.hash.startsWith('#/w/')) wordPage(decodeURIComponent(location.hash.slice(4)));
+  else if (location.hash.startsWith('#/q/')) oneQ(...location.hash.slice(4).split('/'));
+  else if (location.hash === '#/data') dashboard();
   else if (location.hash.startsWith('#/bank')) bankList(location.hash.split('/')[2]);
   else if (location.hash.startsWith('#/exam/')) bankIntro(location.hash.slice(7)); else home();
   scrollTo(0, 0);
