@@ -223,3 +223,39 @@ textarea::placeholder{font-family:var(--f)}
 /* 音频还在下载时 */
 body.aload::after{content:'音频加载中…';position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom));transform:translateX(-50%);background:var(--navy);color:#fff;font-size:13px;padding:8px 16px;border-radius:999px;box-shadow:0 4px 14px rgba(0,0,0,.18);z-index:99;pointer-events:none;animation:aload .2s}
 @keyframes aload{from{opacity:0}}
+
+/* 假名注音 */
+ruby{ruby-position:over}
+rt{font-size:.5em;font-weight:500;color:var(--mute);letter-spacing:0}
+body.nofuri rt{display:none}
+.sh{position:relative}
+.furi{position:absolute;right:0;top:0;font:inherit;font-size:12.5px;font-weight:700;border:0;border-radius:999px;padding:5px 11px;background:var(--sky);color:var(--mute);cursor:pointer}
+.furi.on{background:var(--c);color:#fff}
+/* 收藏 */
+.star{cursor:pointer;font-size:20px;line-height:1;color:#d9cdb8;user-select:none;-webkit-user-select:none}
+.star.on{color:#e3a948}
+.ln{position:relative}
+.ln .star{position:absolute;top:50%;right:-28px;transform:translateY(-20%)}
+.ln.r .star{right:auto;left:-28px}
+.card{position:relative}
+.card>.star{position:absolute;right:14px;top:12px}
+.who-tag .star{font-size:16px;margin-left:8px;vertical-align:-2px}
+.fav-go{display:flex;justify-content:center;gap:6px;margin:4px 0 18px;text-decoration:none}
+.fav-h{font-size:16px;font-weight:900;margin:18px 0 10px}
+.fav-h span{font-size:12px;color:var(--mute);margin-left:6px}
+.fav .ja{font-size:17px;font-weight:700;padding-right:26px}
+.fav .ja.s{font-size:14.5px;margin-top:8px}
+.fav .fk{font-size:12.5px;color:var(--mute);margin-left:8px;font-weight:500}
+.fav .zh{font-size:13px;color:var(--mute)}
+.fav .from{display:inline-block;margin-top:8px;font-size:12px;color:var(--c);text-decoration:none;font-weight:700}
+/* 打卡 */
+.cal{margin-top:14px;background:var(--paper);border-radius:var(--r-l);padding:12px 14px;box-shadow:var(--lift)}
+.cal-h{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap}
+.cal-h b{font-size:15px;font-weight:900}
+.cal-h small{font-size:12px;color:var(--mute)}
+.cal-w{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-top:10px;text-align:center}
+.cal-w span{display:flex;flex-direction:column;align-items:center;gap:4px}
+.cal-w small{font-size:11px;color:var(--mute)}
+.cal-w i{font-style:normal;width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;background:var(--sky);color:var(--mute)}
+.cal-w .ok i{background:#7fb27a;color:#fff}
+.cal-w .today i{box-shadow:0 0 0 2px var(--navy)}
