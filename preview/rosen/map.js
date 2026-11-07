@@ -11,25 +11,28 @@ const MAP = (() => {
     // 东京湾和隅田川（示意）
     g += `<path d="M330,520 C420,505 520,540 640,520 C760,500 860,520 1100,480 L1100,900 L300,900 Z" class="bay"/>
       <path d="M560,60 C540,150 560,230 545,300 C535,360 520,420 470,470" class="river"/><text x="600" y="640" class="bayname">東京湾</text>`;
-    for (let i = 0; i < 420; i++) { const x = (i * 137.5) % 900 - 20, y = (i * 263.1 + (i % 7) * 41) % 560 - 30; g += `<circle cx="${x.toFixed(0)}" cy="${y.toFixed(0)}" r="${(i % 3) * .35 + .4}" class="dust"/>`; }
+    for (let i = 0; i < 150; i++) { const x = (i * 137.5) % 900 - 20, y = (i * 263.1 + (i % 7) * 41) % 560 - 30; g += `<circle cx="${x.toFixed(0)}" cy="${y.toFixed(0)}" r="${(i % 3) * .35 + .4}" class="dust"/>`; }
     let lit = 0, total = 0;
     lines.forEach(l => { const P = l.st.map(s => xy(s.name)); if (l.loop) P.push(P[0]);
-      g += `<polyline points="${P.map(p => p.map(v => v.toFixed(1)).join(',')).join(' ')}" class="ln${l.off ? ' off' : ''}" style="--c:${l.color}"/>`; });
+      const pts = P.map(p => p.map(v => v.toFixed(1)).join(',')).join(' ');
+      g += `<polyline points="${pts}" class="lnglow" style="--c:${l.color}"/><polyline points="${pts}" class="ln${l.off ? ' off' : ''}" style="--c:${l.color}"/>`; });
     const done = new Set();
     lines.forEach(l => l.st.forEach(s => { total++; const [x, y] = xy(s.name), on = S[s.no], k = l.loop; if (on) lit++;
       if (cnt[s.name] > 1) { if (done.has(s.name)) return; done.add(s.name);
         g += `<a ${l.off ? '' : `href="#/s/${s.no}"`}><rect x="${(x - 6).toFixed(1)}" y="${(y - 4).toFixed(1)}" width="12" height="8" rx="4" class="xf${on ? ' on' : ''}"/></a>`; }
-      else if (k) g += `<a href="#/s/${s.no}"><circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="5.6" class="st${on ? ' on' : ''}" style="--c:${l.color}"/><text x="${x.toFixed(1)}" y="${(y + 2.4).toFixed(1)}" class="sk${on ? ' on' : ''}">${s.kana[0][0].slice(0, 1)}</text></a>`;
+      else if (k) g += `<a href="#/s/${s.no}">${on ? `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="10" class="halo"/>` : ''}<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="5.6" class="st${on ? ' on' : ''}" style="--c:${l.color}"/><text x="${x.toFixed(1)}" y="${(y + 2.4).toFixed(1)}" class="sk${on ? ' on' : ''}">${s.kana[0][0].slice(0, 1)}</text></a>`;
       else g += `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="3" class="st${l.off ? ' off' : ''}${on ? ' on' : ''}" style="--c:${l.color}"/>`;
       if (!done.has('L' + s.name)) { done.add('L' + s.name);
         g += `<text x="${(x + 7).toFixed(1)}" y="${(y + 3).toFixed(1)}" class="sn${k || cnt[s.name] > 1 ? ' big' : ''}">${s.name}</text>`; } }));
     lines.forEach(l => { const e = xy(l.st[l.loop ? 0 : l.st.length - 1].name), b = xy(l.st[0].name);
-      [l.loop ? null : b, e].filter(Boolean).forEach(([x, y], i) => { if (l.loop && i) { [x, y] = xy("大崎"); y += 34; }
+      (l.loop ? [[xy('大崎')[0], xy('大崎')[1] + 34]] : [b, e]).forEach(([x, y]) => {
         g += `<g class="lbadge" style="--c:${l.color}" transform="translate(${x.toFixed(1)},${(y - 16).toFixed(1)})"><rect x="-22" y="-8" width="44" height="16" rx="8"/><text dy="4">${l.loop ? 'JY 五十音' : l.code + ' ' + l.level}</text></g>`; }); });
     return {g, lit, total};
   }
+  let cache = {};
   function mount(el, lines, S) {
-    const {g, lit, total} = svg(lines, S);
+    const key = JSON.stringify(S); if (cache.key !== key) cache = {key, ...svg(lines, S)};
+    const {g, lit, total} = cache;
     el.innerHTML = `<div class="mapwrap night" id="mw"><svg id="msv" viewBox="${HOME.join(' ')}" preserveAspectRatio="xMidYMid slice">${g}</svg>
       <div class="mhead"><small>TOKYO · JLPT 五十音 → N1</small><b>日本語の路線図</b><span>坐着东京地铁，从五十音一路坐到 N1</span></div>
       <div class="mstat"><div><b>${lines.length}</b>条线路</div><div><b>${total}</b>个车站</div><div><b>${(lit / total * 100).toFixed(1)}%</b>已点亮</div></div>

@@ -137,10 +137,10 @@ h3{font-size:16px;font-weight:900;margin:22px 0 10px;display:flex;align-items:ce
 /* 夜景 */
 .mapwrap.night{background:#0a101c}
 .mapwrap.night .sea{fill:url(#city)}.mapwrap.night .dust{fill:#ffe9b0;opacity:.35}
-.mapwrap.night .ln{filter:url(#glow);opacity:.9}
-.mapwrap.night .loop{filter:url(#glow)}
+.mapwrap.night .ln{opacity:.95}
+
 .mapwrap.night .st{fill:#121a2a}.mapwrap.night .st.off{fill:#0f1624;opacity:.85}
-.mapwrap.night .st.on{fill:#fff6d6;stroke:#ffd36b;filter:url(#glow);animation:twk 2.6s infinite}
+.mapwrap.night .st.on{fill:#fff6d6;stroke:#ffd36b}
 @keyframes twk{50%{opacity:.75}}
 .mapwrap.night .sk{fill:#e9e2d6}.mapwrap.night .sk.on{fill:#3a2a00}
 .mapwrap.night .sn{fill:#9aa6b8}
@@ -172,6 +172,10 @@ h3{font-size:16px;font-weight:900;margin:22px 0 10px;display:flex;align-items:ce
 .mapwrap .sn.big{font-size:7.5px;opacity:1}
 .mapwrap svg.zin .sn{opacity:1}
 .mapwrap .xf{stroke-width:1.4}
-.mapwrap.night .xf.on{fill:#fff6d6;filter:url(#glow)}
+.mapwrap.night .xf.on{fill:#fff6d6}
 .mapwrap .lbadge rect{fill:var(--c)}.mapwrap .lbadge text{font:900 8px -apple-system,sans-serif;text-anchor:middle;fill:#fff}
 .mapwrap.night .lbadge rect{fill:var(--c)}.mapwrap.night .lbadge text{fill:#fff}
+
+.mapwrap .lnglow,.mapwrap .halo{display:none}
+.mapwrap.night .lnglow{display:inline;fill:none;stroke:var(--c);stroke-width:13;opacity:.22;stroke-linecap:round;stroke-linejoin:round}
+.mapwrap.night .halo{display:inline;fill:#ffd36b;opacity:.28}
