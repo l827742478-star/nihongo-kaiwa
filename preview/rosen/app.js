@@ -20,13 +20,9 @@ const OK = () => tone([[1320, .1], [1760, .14]]);
 const NG = () => tone([[300, .2, .08, 'triangle']]);
 
 // ---------- 线路：假名两条 + N5–N1（内容陆续接入） ----------
-const LINES = [...KANA.map(l => ({...l, kana: true})),
-  ...[['N5', 'N5线', '#7fb27a', ['自我介绍', '数字时间', '家人', '买东西', '吃饭', '交通', '天气', '毕业考']],
-      ['N4', 'N4线', '#e3a948', ['打招呼', '学校', '打工', '医院', '旅行', '约定', '敬语入门', '毕业考']],
-      ['N3', 'N3线', '#9b8fd6', ['第1站', '第2站', '第3站', '第4站', '第5站', '毕业考']],
-      ['N2', 'N2线', '#d98aa8', ['第1站', '第2站', '第3站', '第4站', '第5站', '毕业考']],
-      ['N1', 'N1线', '#3b5b8c', ['第1站', '第2站', '第3站', '第4站', '第5站', '毕业考']]]
-    .map(([code, name, color, st]) => ({code, name, color, off: true, st: st.map((n, i) => ({no: code + String(i + 1).padStart(2, '0'), name: n}))}))];
+const LINES = [...KANA.map(l => ({...l, level: '五十音'})),
+  ...TOKYO.L.map(l => ({...l, off: true, st: l.st.map((n, i) => ({no: l.code + String(i + 1).padStart(2, '0'), name: n, theme: i === l.st.length - 1 ? l.level + ' 毕业考' : ''}))}))];
+const yomi = n => (TOKYO.S[n] || [])[2] || '';
 const stars = () => store.get('stars', {});
 const allSt = () => LINES.flatMap(l => l.st.map(s => ({l, s})));
 const findSt = no => allSt().find(x => x.s.no === no);
@@ -53,12 +49,12 @@ function timetable() {
   if (n2 && !n2.l.off) rows.push(['12:30', n2, '新站', '发车 ›']);
   if (weak) rows.push(['20:00', weak, `复习 · ${'★'.repeat(S[weak.s.no])}`, '再坐一次 ›']);
   return `<div class="tt"><div class="tt-h"><span>今日の時刻表</span><span>${new Date().getMonth() + 1}月${new Date().getDate()}日</span></div>
-    ${rows.map(([tm, x, tag, go]) => `<a href="#/s/${x.s.no}"><time>${tm}</time><span class="ln" style="background:${x.l.color}">${x.s.no}</span><span>${esc(x.s.name)} <em>${tag}</em></span><span class="go">${go}</span></a>`).join('') || '<a>全部坐完啦 🎉</a>'}</div>`;
+    ${rows.map(([tm, x, tag, go]) => `<a href="#/s/${x.s.no}"><time>${tm}</time><span class="ln" style="background:${x.l.color}">${x.s.no}</span><span>${esc(x.s.name)} <em>${esc(x.s.theme || '')} · ${tag}</em></span><span class="go">${go}</span></a>`).join('') || '<a>全部坐完啦 🎉</a>'}</div>`;
 }
 function route(l) {
   const S = stars(), cur = nextSt(), ok = l.st.filter(s => S[s.no]).length;
-  return `<div class="line${l.off ? ' off' : ''}" style="--c:${l.color}"><div class="line-h"><span class="badge">${l.code}</span><div><b>${l.name}</b><small>${l.off ? '内容接入中' : `${l.st.length} 站 · 已到 ${ok} 站`}</small></div><span class="pct">${l.off ? '' : Math.round(ok / l.st.length * 100) + '%'}</span></div>
-    <div class="route">${l.st.map((s, i) => `<a class="stn${S[s.no] ? ' ok' : ''}${cur && cur.s.no === s.no ? ' cur' : ''}" ${l.off ? '' : `href="#/s/${s.no}"`}><i>${s.no.slice(-2)}</i><span>${esc(s.name)}</span>
+  return `<div class="line${l.off ? ' off' : ''}" style="--c:${l.color}"><div class="line-h"><span class="badge">${l.code}</span><div><b>${l.name} · ${l.level}</b><small>${l.off ? '内容接入中' : `${l.st.length} 站 · 已到 ${ok} 站`}</small></div><span class="pct">${l.off ? '' : Math.round(ok / l.st.length * 100) + '%'}</span></div>
+    <div class="route">${l.st.map((s, i) => `<a class="stn${S[s.no] ? ' ok' : ''}${cur && cur.s.no === s.no ? ' cur' : ''}" ${l.off ? '' : `href="#/s/${s.no}"`}><i>${s.no.slice(-2)}</i><span>${esc(s.name)}</span><small class="th">${esc(s.theme || '')}</small>
       <small>${S[s.no] ? '★'.repeat(S[s.no]) : ''}</small>${i === l.st.length - 1 && LINES[LINES.indexOf(l) + 1] ? `<em class="xfer">换乘</em>` : ''}</a>`).join('')}</div></div>`;
 }
 function home() {
@@ -76,9 +72,9 @@ function station(no) {
   const {l, s} = x, i = l.st.indexOf(s), prev = l.st[i - 1], nx = l.st[i + 1];
   const many = s.kana.length > 10;
   $app.innerHTML = `<div style="--c:${l.color}"><a class="back" href="#/">‹ 路线图</a>
-    <div class="sign"><span class="num">${l.code}<em>${s.no.slice(-2)}</em></span><b>${esc(s.name)}</b><small>${esc(l.name)}</small>
+    <div class="sign"><span class="num">${l.code}<em>${s.no.slice(-2)}</em></span><small class="yomi">${esc(yomi(s.name))}</small><b>${esc(s.name)}</b><small>${esc(l.name)} · 这一站学 <em class="theme">${esc(s.theme)}</em></small>
       <div class="band">${prev ? `<a href="#/s/${prev.no}">‹ ${esc(prev.name)}</a>` : '<span></span>'}${nx ? `<a href="#/s/${nx.no}">${esc(nx.name)} ›</a>` : '<span>终点站</span>'}</div></div>
-    <div class="ann"><button id="annb">🔊</button><div><div class="jp">${esc(s.ann)}</div><small>车内广播：下一站，${esc(s.name)}</small></div></div>
+    <div class="ann"><button id="annb">🔊</button><div><div class="jp">${esc(s.ann)}</div><small>车内广播：下一站，${esc(s.name)}（${esc(s.theme)}）</small></div></div>
     <h3>这一站的假名 <small style="font-size:12px;color:var(--mute);font-weight:600">点一下听发音</small></h3>
     <div class="kgrid">${s.kana.map(([k, r, a]) => `<button class="kc" data-a="${a}"><div class="kana" style="${many ? 'font-size:26px' : ''}">${k}</div><small>${r}</small></button>`).join('')}</div>
     <h3>用这一站的假名读单词</h3>
@@ -125,7 +121,7 @@ function arrive(l, s, right) {
   if (st > (S[s.no] || 0)) { S[s.no] = st; store.set('stars', S); store.set('pt', store.get('pt', 0) + st * 5); }
   const nx = l.st[l.st.indexOf(s) + 1], nl = LINES[LINES.indexOf(l) + 1];
   $app.innerHTML = `<div class="arrive" style="--c:${l.color}">
-    ${st ? `<div class="stamp${first ? ' new' : ''}"><span class="kana">${s.kana[0][0]}</span><b>${esc(s.name)}</b><small>${l.code}${s.no.slice(-2)} · ${new Date().getMonth() + 1}.${new Date().getDate()}</small></div>` : ''}
+    ${st ? `<div class="stamp${first ? ' new' : ''}"><span class="kana">${s.kana[0][0].slice(0, 2)}</span><b>${esc(s.name)}駅</b><small>${esc(s.theme)} · ${new Date().getMonth() + 1}.${new Date().getDate()}</small></div>` : ''}
     <h2>${st ? '到站了！' : '差一点点…'}</h2><div class="stars">${[1, 2, 3].map(k => `<i class="${k <= st ? 'on' : ''}">★</i>`).join('')}</div>
     <p style="color:var(--mute);font-size:14px">答对 ${right} / 10　${st ? `+${st * 5} 积分` : '答对 8 题才能到站'}</p>
     ${st && nx ? `<a class="btn go" href="#/s/${nx.no}">🚃 下一站：${esc(nx.name)}</a>` : ''}
@@ -138,7 +134,7 @@ function stampBook() {
   const S = stars();
   $app.innerHTML = `<a class="back" href="#/">‹ 路线图</a><h2>🎫 印章册</h2><p style="color:var(--mute);font-size:13.5px;margin-bottom:6px">每到一站盖一个章，集满一条线就毕业了。</p>` +
     LINES.filter(l => !l.off).map(l => `<h3><span class="badge" style="--c:${l.color};width:26px;height:26px;border-width:4px;font-size:11px">${l.code}</span>${l.name}　${l.st.filter(s => S[s.no]).length}/${l.st.length}</h3>
-    <div class="sbook" style="--c:${l.color}">${l.st.map(s => `<a href="#/s/${s.no}" class="stamp${S[s.no] ? '' : ' no'}"><span class="kana">${S[s.no] ? s.kana[0][0] : '?'}</span><b>${esc(s.name)}</b><small>${S[s.no] ? '★'.repeat(S[s.no]) : l.code + s.no.slice(-2)}</small></a>`).join('')}</div>`).join('');
+    <div class="sbook" style="--c:${l.color}">${l.st.map(s => `<a href="#/s/${s.no}" class="stamp${S[s.no] ? '' : ' no'}"><span class="kana">${S[s.no] ? s.kana[0][0].slice(0, 2) : '?'}</span><b>${esc(s.name)}</b><small>${S[s.no] ? '★'.repeat(S[s.no]) : l.code + s.no.slice(-2)}</small></a>`).join('')}</div>`).join('');
 }
 function go() {
   au.pause(); const m = location.hash.match(/^#\/s\/(\w+)/);
