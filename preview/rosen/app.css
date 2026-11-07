@@ -241,3 +241,5 @@ rt{font-size:.5em;color:var(--mute)}
 .jpmap .lbadge text{font:900 12px -apple-system,sans-serif;fill:var(--c);text-anchor:middle}.jpmap .lbadge .lbn{font-size:8.5px;fill:#dfe6f0;font-weight:700}
 .jpmap .lab1 text,.jpmap .lab2 text{fill:#e5ebf3;stroke:#08101e;stroke-width:3px}
 .jpmap svg.zin .lbadge{display:inline}
+
+.mhead b em{font-style:normal;background:linear-gradient(180deg,#ffe7a8,#e0b25a);-webkit-background-clip:text;background-clip:text;color:transparent}
