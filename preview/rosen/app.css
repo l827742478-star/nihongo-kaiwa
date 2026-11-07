@@ -216,3 +216,14 @@ rt{font-size:.5em;color:var(--mute)}
 .ex-o .opt em{font-style:normal;flex:none;width:24px;height:24px;border-radius:50%;background:#f0e9dc;display:grid;place-items:center;font-size:13px;font-weight:900}
 .ex-why{margin-top:12px;border-radius:14px;padding:12px 14px;font-size:14px;line-height:1.7}.ex-why.g{background:#e6f3e2}.ex-why.b{background:#fbe8e3}
 .ex-why b{font-size:15px}
+
+.mapwrap .lab1 text,.mapwrap .lab2 text{font-family:-apple-system,"PingFang SC",sans-serif;font-weight:700;fill:#4a433d;paint-order:stroke;stroke:#f3efe6;stroke-width:2.2px;stroke-linejoin:round}
+.mapwrap.night .lab1 text,.mapwrap.night .lab2 text{fill:#d7dee8;stroke:#0b1220}
+.mapwrap .lab2{display:none}.mapwrap svg.zin .lab2{display:inline}.mapwrap svg.zin .lab1{display:none}
+.mapwrap .lab2 text{stroke-width:1.2px}
+
+.mapwrap .mhead,.mapwrap .mstat{transition:opacity .2s}
+.mapwrap.zin .mhead{opacity:0}
+.mapwrap svg.zin .ln{stroke-width:3}.mapwrap svg.zin .lnglow{stroke-width:7}
+.mapwrap svg.zin .lbadge{display:none}
+.mapwrap svg.zin .st{stroke-width:1.1}

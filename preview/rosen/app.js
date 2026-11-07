@@ -253,4 +253,7 @@ function go() {
   if (m) station(m[1]); else if (location.hash === '#/stamps') stampBook(); else if (location.hash === '#/wrong') wrongBook(); else home();
   scrollTo(0, 0);
 }
-addEventListener('hashchange', go); go();
+addEventListener('hashchange', go);
+// 链接指向当前网址时（比如小测里的「‹ 渋谷」），浏览器不会触发 hashchange，这里手动重新打开
+document.addEventListener('click', e => { const a = e.target.closest('a[href^="#"]'); if (a && a.getAttribute('href') === location.hash) { e.preventDefault(); go(); } });
+go();
