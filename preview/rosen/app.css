@@ -227,3 +227,17 @@ rt{font-size:.5em;color:var(--mute)}
 .mapwrap svg.zin .ln{stroke-width:3}.mapwrap svg.zin .lnglow{stroke-width:7}
 .mapwrap svg.zin .lbadge{display:none}
 .mapwrap svg.zin .st{stroke-width:1.1}
+/* 全日本夜景 */
+.jpmap .star{fill:#fff;opacity:.35}
+.jpmap .land{fill:url(#land)}.jpmap .shore{fill:none;stroke:#5d7ba6;stroke-width:1.2;opacity:.55}
+.jpmap .lt{fill:#ffd88a;opacity:.55}
+.jpmap .ln{stroke-width:4.5}.jpmap .ln.off{opacity:.55;stroke-dasharray:1 0}
+.jpmap .lnglow{display:inline;fill:none;stroke:var(--c);stroke-width:14;opacity:.18;stroke-linecap:round;stroke-linejoin:round}
+.jpmap .st{fill:#0d1626;stroke:var(--c);stroke-width:1.8}.jpmap .st.on{fill:#fff6d6;stroke:#ffd36b}
+.jpmap .tkglow{fill:#ffdf9a;opacity:.25}.jpmap .tkring{fill:#0d1626;stroke:var(--c);stroke-width:4;opacity:.6}
+.jpmap .tkpro{fill:none;stroke:#ffd36b;stroke-width:4;transform:rotate(-90deg);transform-box:fill-box;transform-origin:center}
+.jpmap .tkt{font:900 6.5px "Hiragino Mincho ProN",serif;fill:#fff;text-anchor:middle}
+.jpmap .lbadge rect{fill:rgba(8,14,26,.8);stroke:var(--c);stroke-width:2}
+.jpmap .lbadge text{font:900 12px -apple-system,sans-serif;fill:var(--c);text-anchor:middle}.jpmap .lbadge .lbn{font-size:8.5px;fill:#dfe6f0;font-weight:700}
+.jpmap .lab1 text,.jpmap .lab2 text{fill:#e5ebf3;stroke:#08101e;stroke-width:3px}
+.jpmap svg.zin .lbadge{display:inline}

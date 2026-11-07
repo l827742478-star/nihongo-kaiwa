@@ -20,12 +20,14 @@ const OK = () => tone([[1320, .1], [1760, .14]]);
 const NG = () => tone([[300, .2, .08, 'triangle']]);
 
 // ---------- 线路：假名两条 + N5–N1（内容陆续接入） ----------
+// 线路：山手線（五十音）+ 五条新干线（N5–N1）。N5 有内容，其余先只有站名
 const LINES = [...KANA.map(l => ({...l, level: '五十音'})),
-  ...TOKYO.L.map(l => l.code === 'G' && window.N5 ? {...l, st: N5.st} :
-    ({...l, off: true, st: l.st.map((n, i) => ({no: l.code + String(i + 1).padStart(2, '0'), name: n, theme: i === l.st.length - 1 ? l.level + ' 毕业考' : ''}))}))];
+  ...Object.entries(JP.lines).map(([code, l]) => code === 'N5' && window.N5
+    ? {code, level: code, name: l.name, color: l.color, geo: l.st, st: N5.st}
+    : {code, level: code, name: l.name, color: l.color, geo: l.st, off: true, st: l.st.map(([n], i) => ({no: code + String(i + 1).padStart(2, '0'), name: n, theme: i === l.st.length - 1 ? code + ' 毕业考' : ''}))})];
+const yomi = n => (TOKYO.S[n] || [])[2] || JP.yomi[n] || '';
 const RB = t => esc(t).replace(/\{([^|{}]+)\|([^{}]+)\}/g, '<ruby>$1<rt>$2</rt></ruby>');
 const mark = s => s.kana ? s.kana[0][0].slice(0, 2) : s.name[0];
-const yomi = n => (TOKYO.S[n] || [])[2] || '';
 const stars = () => store.get('stars', {});
 const allSt = () => LINES.flatMap(l => l.st.map(s => ({l, s})));
 const findSt = no => allSt().find(x => x.s.no === no);
@@ -78,7 +80,7 @@ function station(no) {
     <div class="sign"><span class="num">${l.code}<em>${s.no.slice(-2)}</em></span><small class="yomi">${esc(yomi(s.name))}</small><b>${esc(s.name)}</b><small>${esc(l.name)} · 这一站学 <em class="theme">${esc(s.theme)}</em></small>
       <div class="band">${prev ? `<a href="#/s/${prev.no}">‹ ${esc(prev.name)}</a>` : '<span></span>'}${nx ? `<a href="#/s/${nx.no}">${esc(nx.name)} ›</a>` : '<span>终点站</span>'}</div></div>
     <div class="ann"><button id="annb">🔊</button><div><div class="jp">${esc(s.ann)}</div><small>车内广播：下一站，${esc(s.name)}（${esc(s.theme)}）</small></div></div>`;
-  if (s.exam) { const E = l.code === 'G' && window.EXAM_N5, Q = E ? examQs(E) : [], best = store.get('exam_' + s.no, null);
+  if (s.exam) { const E = l.code === 'N5' && window.EXAM_N5, Q = E ? examQs(E) : [], best = store.get('exam_' + s.no, null);
     $app.innerHTML = head + `<div class="card ex-intro"><div style="font-size:44px">🎓</div><h2>${esc(l.level)} 毕业考</h2>
       <p>用一整套真题来考，考过就能换乘下一条线。</p>
       ${E ? `<div class="ex-box"><b>${esc(E.title)}</b>${E.parts.map(pt => `<span>${esc(pt.name)} ${examQs({parts: [pt]}).length} 题</span>`).join('')}<span>及格线：60%</span></div>
@@ -221,7 +223,7 @@ function examEnd(l, s, E, r, n) {
 }
 function wrongBook() {
   const all = window.EXAM_N5 ? examQs(EXAM_N5) : [], wr = store.get('wrong', []), Q = wr.map(w => all.find(q => q.id === w.id)).filter(Boolean);
-  const x = findSt('G19');
+  const x = findSt('N517');
   $app.innerHTML = `<div style="--c:#e8857a"><a class="back" href="#/">‹ 路线图</a><h2>📕 错题本</h2>
     <p style="color:var(--mute);font-size:13.5px">真题里做错的题都在这里，再做对一次就会自动移出。</p>
     ${Q.length ? `<button class="btn go" id="rw">把 ${Q.length} 道错题再做一遍</button>` + Q.map(q => `<div class="gm" style="margin-top:10px"><small style="color:var(--mute)">${esc(q.part)} · ${esc(q.id.split('|')[0])}</small><div class="jp" style="margin:4px 0">${U(q.q)}</div><div style="font-size:13.5px">正确答案：<b class="jp">${U(q.o[q.a])}</b></div><div style="font-size:13px;color:#5a514b;margin-top:4px">${esc(q.why)}</div></div>`).join('')
