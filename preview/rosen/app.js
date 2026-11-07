@@ -63,7 +63,8 @@ function route(l) {
       <small>${S[s.no] ? '★'.repeat(S[s.no]) : ''}</small>${i === l.st.length - 1 && LINES[LINES.indexOf(l) + 1] ? `<em class="xfer">换乘</em>` : ''}</a>`).join('')}</div></div>`;
 }
 function home() {
-  $app.innerHTML = `<div id="bigmap"></div>` + icCard() + timetable() + `<h3>🚉 各条线路 <small style="font-size:12px;color:var(--mute);font-weight:600">每到一站盖一个章</small></h3>` + LINES.map(route).join('');
+  const B = window.BANK || [];
+  $app.innerHTML = `<div id="bigmap"></div>` + icCard() + timetable() + `<a class="bk-entry" href="#/bank"><span>📚</span><div><b>真题库</b><small>${B.length} 套历年真题 · ${B.reduce((a, b) => a + b[2], 0)} 题 · 每题中文解析</small></div><i>›</i></a>` + `<h3>🚉 各条线路 <small style="font-size:12px;color:var(--mute);font-weight:600">每到一站盖一个章</small></h3>` + LINES.map(route).join('');
   MAP.mount(document.getElementById('bigmap'), LINES, stars());
   const ic = document.getElementById('ic');
   ic.onclick = () => { ic.classList.remove('pi'); void ic.offsetWidth; ic.classList.add('pi'); PI();
@@ -226,9 +227,70 @@ function wrongBook() {
   const x = findSt('N517');
   $app.innerHTML = `<div style="--c:#e8857a"><a class="back" href="#/">‹ 路线图</a><h2>📕 错题本</h2>
     <p style="color:var(--mute);font-size:13.5px">真题里做错的题都在这里，再做对一次就会自动移出。</p>
-    ${Q.length ? `<button class="btn go" id="rw">把 ${Q.length} 道错题再做一遍</button>` + Q.map(q => `<div class="gm" style="margin-top:10px"><small style="color:var(--mute)">${esc(q.part)} · ${esc(q.id.split('|')[0])}</small><div class="jp" style="margin:4px 0">${U(q.q)}</div><div style="font-size:13.5px">正确答案：<b class="jp">${U(q.o[q.a])}</b></div><div style="font-size:13px;color:#5a514b;margin-top:4px">${esc(q.why)}</div></div>`).join('')
-      : '<div class="card" style="text-align:center;margin-top:14px">还没有错题 👍</div>'}</div>`;
+    ${store.get('wrong2', []).length ? `<h3>真题库错题 ${store.get('wrong2', []).length} 题</h3>` + store.get('wrong2', []).slice(0, 120).map(q => `<div class="gm" style="margin-top:10px"><small style="color:var(--mute)">${q.lv} ${q.sess.replace('.', '年')}月 · 問題${q.m}</small><div class="jp" style="margin:4px 0">${U(q.q)}</div><div style="font-size:13.5px">正确答案：<b class="jp">${q.a + 1}. ${U(q.o[q.a])}</b></div><div style="font-size:13px;color:#5a514b;margin-top:4px">${esc(q.why)}</div></div>`).join('') : ''}
+    ${Q.length ? `<h3>N5 毕业考错题</h3><button class="btn go" id="rw">把 ${Q.length} 道错题再做一遍</button>` + Q.map(q => `<div class="gm" style="margin-top:10px"><small style="color:var(--mute)">${esc(q.part)} · ${esc(q.id.split('|')[0])}</small><div class="jp" style="margin:4px 0">${U(q.q)}</div><div style="font-size:13.5px">正确答案：<b class="jp">${U(q.o[q.a])}</b></div><div style="font-size:13px;color:#5a514b;margin-top:4px">${esc(q.why)}</div></div>`).join('')
+      : store.get('wrong2', []).length ? '' : '<div class="card" style="text-align:center;margin-top:14px">还没有错题 👍</div>'}</div>`;
   const b = document.getElementById('rw'); if (b) b.onclick = () => exam(x, EXAM_N5, Q, true);
+}
+// ---------- 真题库：按级别列出每一场，严格模式（计时、交卷后看答案）/ 学习模式（一题一解析） ----------
+const LVC = {N1: '#7b5bb6', N2: '#2fa94e', N3: '#b7a66e', N4: '#ee7b1a', N5: '#1f6fb8'};
+function bankList(lv) {
+  const B = window.BANK || [], lvs = ['N1', 'N2', 'N3', 'N4', 'N5'].filter(x => B.some(b => b[0] === x)); lv = lv || lvs[0];
+  const done = store.get('bank_done', {});
+  $app.innerHTML = `<div style="--c:${LVC[lv]}"><a class="back" href="#/">‹ 首页</a><h2>📚 真题库</h2>
+    <p style="color:var(--mute);font-size:13.5px">历年 JLPT 真题，答案逐题对照标准答案，每题都有中文解析。共 ${B.length} 套、${B.reduce((a, b) => a + b[2], 0)} 题。</p>
+    <div class="bk-tabs">${lvs.map(x => `<a href="#/bank/${x}" class="${x === lv ? 'on' : ''}" style="--c:${LVC[x]}">${x}<small>${B.filter(b => b[0] === x).length} 套</small></a>`).join('')}</div>
+    <div class="bk-grid">${B.filter(b => b[0] === lv).sort((a, b) => b[1].localeCompare(a[1])).map(([l, ss, n]) => { const d = done[l + '_' + ss];
+      return `<a class="bk-card" href="#/exam/${l}_${ss}"><small>${l} · ${n} 题</small><b>${ss.replace('.', '年')}月</b>${d ? `<em>上次 ${d.r}/${d.n}</em>` : '<em class="new">未做</em>'}</a>`; }).join('')}</div></div>`;
+}
+async function bankLoad(id) { try { const r = await fetch('bank/' + id + '.json'); return await r.json(); } catch (e) { toast('加载失败，检查一下网络'); return null; } }
+async function bankIntro(id) {
+  const d = await bankLoad(id); if (!d) return; const c = LVC[d.lv];
+  const ms = [...new Set(d.qs.map(q => q.m))];
+  $app.innerHTML = `<div style="--c:${c}"><a class="back" href="#/bank/${d.lv}">‹ 真题库</a>
+    <div class="card ex-intro"><div style="font-size:40px">📖</div><h2>${d.sess.replace('.', '年')}月 JLPT ${d.lv}</h2>
+    <p>整套 ${d.qs.length} 题 · 文字词汇 / 文法 / 读解</p><div class="ex-box">${ms.map(m => `<span>問題${m}　${esc(d.mondai[m] || '')}　${d.qs.filter(q => q.m === m).length} 题</span>`).join('')}</div></div>
+    <button class="bk-mode" id="m1"><em>严格模式</em><b>模拟真实考试</b><span>全卷计时、统一交卷，做的时候不看答案，交卷后看成绩和每题解析。</span></button>
+    <button class="bk-mode g" id="m2"><em>学习模式</em><b>边做题，边看解析</b><span>不计时，每做完一题马上看正确答案、为什么选、四个选项逐项解析。</span></button></div>`;
+  document.getElementById('m1').onclick = () => bankRun(d, true);
+  document.getElementById('m2').onclick = () => bankRun(d, false);
+}
+function bankRun(d, strict) {
+  const c = LVC[d.lv], Q = d.qs, ans = {}, t0 = Date.now(); let i = 0, tick;
+  const head = q => `問題${q.m}　${esc(d.mondai[q.m] || '')}`;
+  const optsHtml = (q, show, pick) => q.o.map((o, j) => `<button class="opt r jp${show && j === q.a ? ' ok' : ''}${show && pick === j && j !== q.a ? ' no' : ''}${!show && pick === j ? ' sel' : ''}" data-j="${j}"><em>${j + 1}</em>${U(o)}</button>`).join('');
+  const whyHtml = (q, pick) => `<div class="ex-why ${pick === q.a ? 'g' : 'b'}"><b>${pick === undefined ? '正确答案是 ' + (q.a + 1) : pick === q.a ? '⭕ 答对了' : '❌ 正确答案是 ' + (q.a + 1)}</b><p>${esc(q.why)}</p>
+    ${q.ow.length === 4 ? `<div class="ow">${q.ow.map((w, j) => `<div class="${j === q.a ? 'ok' : ''}"><em>${j + 1}</em>${esc(w)}</div>`).join('')}</div>` : ''}</div>`;
+  const record = (q, pick) => { let wr = store.get('wrong2', []); const id = d.lv + '_' + d.sess + '|' + q.n; wr = wr.filter(w => w.id !== id);
+    if (pick !== q.a) wr.unshift({id, lv: d.lv, sess: d.sess, m: q.m, q: q.q, o: q.o, a: q.a, why: q.why, ow: q.ow}); store.set('wrong2', wr.slice(0, 800)); };
+  const draw = () => {
+    if (i >= Q.length) return finish();
+    const q = Q[i], ps = q.p && d.ps[q.p];
+    $app.innerHTML = `<div style="--c:${c}"><a class="back" href="#/exam/${d.lv}_${d.sess}">‹ 退出</a>
+      <div class="qtop"><span>${d.lv} ${d.sess.replace('.', '年')}月 · ${strict ? '严格模式' : '学习模式'}</span><span>${strict ? `<b id="tm">00:00</b>　` : ''}${i + 1} / ${Q.length}</span></div>
+      <div class="bar"><i style="width:${i / Q.length * 100}%"></i></div>
+      <div class="ex-h jp">${head(q)}</div>${ps ? `<details class="ex-ps" ${q.p !== (Q[i - 1] || {}).p ? 'open' : ''}><summary>阅读文章</summary><div class="jp">${U(ps)}</div></details>` : ''}
+      <div class="ex-q jp"><small>${q.n}.</small> ${U(q.q)}</div><div class="ex-o">${optsHtml(q, false, ans[q.n])}</div><div id="why"></div>
+      ${strict ? `<div class="bk-nav"><button class="btn" id="pv" ${i ? '' : 'disabled'}>‹ 上一题</button><button class="btn go" id="nx">${i + 1 < Q.length ? '下一题 ›' : '交卷'}</button></div>` : ''}</div>`;
+    if (strict) { document.getElementById('pv').onclick = () => { i--; draw(); }; document.getElementById('nx').onclick = () => { if (i + 1 >= Q.length && Object.keys(ans).length < Q.length && !confirm2()) return; i++; draw(); scrollTo(0, 0); }; }
+    $app.querySelectorAll('.opt').forEach(b => b.onclick = () => { const j = +b.dataset.j;
+      if (strict) { ans[q.n] = j; $app.querySelectorAll('.opt').forEach(x => x.classList.toggle('sel', +x.dataset.j === j)); return; }
+      if (ans[q.n] !== undefined) return; ans[q.n] = j; record(q, j); j === q.a ? OK() : NG();
+      $app.querySelector('.ex-o').innerHTML = optsHtml(q, true, j);
+      document.getElementById('why').innerHTML = whyHtml(q, j) + `<button class="btn go" id="nx">${i + 1 < Q.length ? '下一题 ›' : '看成绩'}</button>`;
+      document.getElementById('nx').onclick = () => { i++; draw(); scrollTo(0, 0); }; });
+  };
+  const confirm2 = () => { toast(`还有 ${Q.length - Object.keys(ans).length} 题没做，再点一次「交卷」就交`); const k = confirm2.k; confirm2.k = true; return k; };
+  if (strict) tick = setInterval(() => { const e = document.getElementById('tm'); if (!e) return; const s = (Date.now() - t0) / 1000 | 0; e.textContent = `${String(s / 60 | 0).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`; }, 1000);
+  const finish = () => { clearInterval(tick); const r = Q.filter(q => ans[q.n] === q.a).length, D = store.get('bank_done', {}); D[d.lv + '_' + d.sess] = {r, n: Q.length}; store.set('bank_done', D);
+    if (strict) Q.forEach(q => record(q, ans[q.n]));
+    const ms = [...new Set(Q.map(q => q.m))], min = (Date.now() - t0) / 60000 | 0;
+    $app.innerHTML = `<div style="--c:${c}"><a class="back" href="#/bank/${d.lv}">‹ 真题库</a><div class="card ex-intro"><div style="font-size:44px">${r / Q.length >= .6 ? '🎉' : '💪'}</div>
+      <h2>${r} / ${Q.length}（${Math.round(r / Q.length * 100)}%）</h2><p>${d.sess.replace('.', '年')}月 ${d.lv}${strict ? ` · 用时 ${min} 分钟` : ''}</p>
+      <div class="ex-box">${ms.map(m => { const qs = Q.filter(q => q.m === m), ok = qs.filter(q => ans[q.n] === q.a).length; return `<span>問題${m} ${esc(d.mondai[m] || '')}　${ok}/${qs.length}</span>`; }).join('')}</div></div>
+      ${strict ? `<h3>逐题解析</h3>` + Q.map(q => `<div class="gm"><div class="jp" style="font-weight:700">${q.n}. ${U(q.q)}</div><div style="font-size:13px;color:var(--mute);margin:4px 0">你选：${ans[q.n] === undefined ? '没做' : ans[q.n] + 1}</div>${whyHtml(q, ans[q.n])}</div>`).join('') : ''}
+      <a class="btn go" href="#/wrong">📕 错题本</a><a class="btn" href="#/bank/${d.lv}">回到真题库</a></div>`; scrollTo(0, 0); };
+  draw();
 }
 function arrive(l, s, right) {
   const st = right >= 10 ? 3 : right >= 9 ? 2 : right >= 8 ? 1 : 0, S = stars(), first = !S[s.no] && st;
@@ -252,7 +314,9 @@ function stampBook() {
 }
 function go() {
   au.pause(); const m = location.hash.match(/^#\/s\/(\w+)/);
-  if (m) station(m[1]); else if (location.hash === '#/stamps') stampBook(); else if (location.hash === '#/wrong') wrongBook(); else home();
+  if (m) station(m[1]); else if (location.hash === '#/stamps') stampBook(); else if (location.hash === '#/wrong') wrongBook();
+  else if (location.hash.startsWith('#/bank')) bankList(location.hash.split('/')[2]);
+  else if (location.hash.startsWith('#/exam/')) bankIntro(location.hash.slice(7)); else home();
   scrollTo(0, 0);
 }
 addEventListener('hashchange', go);

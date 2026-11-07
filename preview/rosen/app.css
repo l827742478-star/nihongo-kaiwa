@@ -243,3 +243,21 @@ rt{font-size:.5em;color:var(--mute)}
 .jpmap svg.zin .lbadge{display:inline}
 
 .mhead b em{font-style:normal;background:linear-gradient(180deg,#ffe7a8,#e0b25a);-webkit-background-clip:text;background-clip:text;color:transparent}
+
+/* 真题库 */
+.bk-entry{display:flex;align-items:center;gap:12px;margin-top:14px;background:linear-gradient(135deg,#1b2a48,#0d1628);color:#fff;border-radius:18px;padding:16px;box-shadow:0 8px 20px rgba(10,20,40,.25)}
+.bk-entry span{font-size:30px}.bk-entry b{font-size:17px;display:block}.bk-entry small{font-size:12.5px;color:#c9d3e3}.bk-entry i{margin-left:auto;font-style:normal;font-size:22px;color:#ffd36b}
+.bk-tabs{display:flex;gap:8px;margin:12px 0}.bk-tabs a{flex:1;text-align:center;padding:8px 0;border-radius:12px;background:var(--paper);box-shadow:var(--lift);font-weight:900;font-size:16px}
+.bk-tabs a small{display:block;font-size:11px;font-weight:700;color:var(--mute)}.bk-tabs a.on{background:var(--c);color:#fff}.bk-tabs a.on small{color:#fff}
+.bk-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.bk-card{background:var(--paper);border-radius:16px;box-shadow:var(--lift);padding:14px;border-top:4px solid var(--c)}
+.bk-card small{font-size:12px;color:var(--mute);font-weight:700}.bk-card b{display:block;font-size:20px;font-weight:900;margin:4px 0}
+.bk-card em{font-style:normal;font-size:12px;font-weight:800;color:var(--c)}.bk-card em.new{color:var(--mute)}
+.bk-mode{display:block;width:100%;text-align:left;background:var(--paper);border-radius:18px;box-shadow:var(--lift);padding:16px;margin-top:12px;border-left:5px solid #c9a24a}
+.bk-mode.g{border-left-color:#5fb39a}.bk-mode em{font-style:normal;font-size:12px;font-weight:900;color:#a47d22;background:#f8edd3;border-radius:6px;padding:2px 8px}
+.bk-mode.g em{color:#2f7f66;background:#dcf0e8}.bk-mode b{display:block;font-size:18px;font-weight:900;margin:6px 0 4px}.bk-mode span{font-size:13.5px;color:#5a514b;line-height:1.6}
+.bk-nav{display:grid;grid-template-columns:1fr 1.6fr;gap:10px}.bk-nav .btn:disabled{opacity:.4}
+.opt.sel{background:#e7eefb;box-shadow:0 2px 0 #7f9fd6}
+.ex-q small{color:var(--mute);font-weight:800}
+.ow{margin-top:8px;display:grid;gap:6px}.ow div{display:flex;gap:8px;font-size:13.5px;line-height:1.6;background:rgba(255,255,255,.6);border-radius:8px;padding:6px 8px}
+.ow div em{font-style:normal;flex:none;width:20px;height:20px;border-radius:50%;background:#eee5d6;display:grid;place-items:center;font-size:11px;font-weight:900}.ow div.ok em{background:#7fb27a;color:#fff}
