@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="zh"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<title>假名怪兽图鉴</title>
+<meta name="description" content="听声音打假名怪兽，收集 92 只怪兽，开口说日语打 BOSS。">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=DotGothic16&display=swap" rel="stylesheet">
+<style>
+:root{--sky:#7ec8ff;--sky2:#c9ecff;--grass:#5cc15a;--grass2:#3d9a3f;--ink:#1d1b2e;--card:#fffaf0;--red:#ff4d5e;--yel:#ffd23f;--blue:#2f6bff;--sub:#6d6a7c}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{background:var(--ink);color:var(--ink);font-family:"DotGothic16","PingFang SC",monospace;min-height:100vh;overflow-x:hidden}
+.app{max-width:480px;margin:0 auto;min-height:100vh;background:linear-gradient(var(--sky) 0,var(--sky2) 100%);position:relative;padding:14px 16px 30px}
+.px{image-rendering:pixelated}
+.box{background:var(--card);border:4px solid var(--ink);box-shadow:4px 4px 0 var(--ink);padding:12px}
+.btn{display:block;width:100%;border:4px solid var(--ink);background:var(--yel);box-shadow:4px 4px 0 var(--ink);padding:12px;font:inherit;font-size:19px;cursor:pointer;color:var(--ink);margin-top:12px}
+.btn:active{transform:translate(3px,3px);box-shadow:1px 1px 0 var(--ink)}
+.btn.red{background:var(--red);color:#fff}.btn.w{background:var(--card)}.btn.blue{background:var(--blue);color:#fff}
+.hdr{display:flex;gap:8px;align-items:center;font-size:16px}
+.hdr .pill{background:var(--card);border:3px solid var(--ink);padding:3px 8px}
+h1{font-size:38px;line-height:1.05;text-align:center;color:#fff;text-shadow:3px 3px 0 var(--ink),-2px -2px 0 var(--ink),2px -2px 0 var(--ink),-2px 2px 0 var(--ink);margin:14px 0 4px}
+h1 b{color:var(--yel);font-weight:400}
+.tag{text-align:center;font-size:15px;color:var(--ink);margin-bottom:10px}
+.map{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:10px}
+.st{background:var(--card);border:3px solid var(--ink);box-shadow:3px 3px 0 var(--ink);text-align:center;padding:6px 0 4px;cursor:pointer;font-size:20px;position:relative}
+.st small{display:block;font-size:11px;color:#c99a00;letter-spacing:-1px;min-height:13px}
+.st.lk{background:#cfcbd8;color:#7b7790}.st.lk:after{content:"🔒";position:absolute;top:-8px;right:-6px;font-size:14px}
+.sec{font-size:15px;margin-top:14px;color:var(--ink);background:rgba(255,255,255,.6);display:inline-block;padding:2px 8px;border:2px solid var(--ink)}
+.rev{background:#3b1d4f;color:#fff;border:4px solid var(--ink);box-shadow:4px 4px 0 var(--ink);padding:10px;margin-top:12px;cursor:pointer;display:flex;align-items:center;gap:10px;font-size:16px}
+/* 战斗 */
+.arena{position:relative;height:330px;margin-top:10px;border:4px solid var(--ink);background:linear-gradient(#9fd8ff 0,#d8f1ff 55%,#7bd36f 55%,#5cc15a 100%);overflow:hidden}
+.lane{position:absolute;left:0;right:0;height:1px}
+.hero{position:absolute;left:6px;bottom:90px;width:56px}
+.mon{position:absolute;width:86px;cursor:pointer;transition:filter .1s;touch-action:manipulation}
+.mon img{width:86px;display:block}
+.mon .k{position:absolute;left:50%;top:74%;transform:translate(-50%,-50%);background:#fff;border:3px solid var(--ink);font-size:22px;min-width:34px;text-align:center;line-height:30px;font-family:"Hiragino Maru Gothic ProN","Hiragino Sans",sans-serif;font-weight:800}
+.mon.hit{animation:pop .35s forwards}.mon.no{animation:shake .3s}.mon.bye{opacity:0;transition:opacity .4s}
+@keyframes pop{0%{filter:brightness(4)}100%{transform:scale(1.6);opacity:0}}
+@keyframes shake{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+.arena.hurt{animation:hurt .35s}@keyframes hurt{0%,100%{transform:none}30%{transform:translate(-8px,4px)}60%{transform:translate(8px,-4px);background:#ffb3b3}}
+.float{position:absolute;font-size:22px;color:var(--yel);text-shadow:2px 2px 0 var(--ink);pointer-events:none;animation:up .8s forwards}
+@keyframes up{to{transform:translateY(-50px);opacity:0}}
+.prompt{display:flex;align-items:center;justify-content:space-between;margin-top:10px}
+.prompt .box{flex:1;font-size:18px;padding:8px 10px}
+.ear{border:4px solid var(--ink);background:var(--blue);color:#fff;font:inherit;font-size:22px;width:58px;height:50px;margin-left:8px;box-shadow:3px 3px 0 var(--ink);cursor:pointer}
+.combo{position:absolute;right:8px;top:6px;font-size:22px;color:#fff;text-shadow:2px 2px 0 var(--ink)}
+.wave{position:absolute;left:8px;top:6px;font-size:15px;background:var(--card);border:3px solid var(--ink);padding:1px 6px}
+/* BOSS */
+.boss{text-align:center;margin-top:8px}
+.boss img{width:170px;animation:bob 1.2s infinite}@keyframes bob{50%{transform:translateY(-6px)}}
+.boss.dmg img{animation:dmg .3s}@keyframes dmg{0%{filter:brightness(4)}50%{transform:translateX(10px)}}
+.hp{height:18px;border:3px solid var(--ink);background:#fff;margin:6px auto;width:80%;display:flex}
+.hp i{flex:1;background:var(--red);border-right:2px solid var(--ink)}.hp i.off{background:#ddd}
+.slots{display:flex;justify-content:center;gap:6px;margin-top:8px}
+.slot{width:46px;height:52px;border:3px dashed var(--ink);background:rgba(255,255,255,.7);font-size:28px;line-height:46px;font-family:"Hiragino Maru Gothic ProN",sans-serif;font-weight:800}
+.slot.on{border-style:solid;background:var(--yel)}
+.tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:12px}
+.tile{border:4px solid var(--ink);background:var(--card);box-shadow:3px 3px 0 var(--ink);font-size:28px;padding:8px 0;cursor:pointer;font-family:"Hiragino Maru Gothic ProN",sans-serif;font-weight:800;color:var(--ink)}
+.tile.used{visibility:hidden}.tile.no{background:#ffb3b3;animation:shake .3s}
+.tbar{height:10px;border:3px solid var(--ink);background:#fff;margin-top:10px}.tbar i{display:block;height:100%;background:var(--blue)}
+.mic{background:var(--red);color:#fff}.mic.on{animation:pulse 1s infinite}@keyframes pulse{50%{background:#ff8a96}}
+/* 图鉴 */
+.dex{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-top:10px}
+.dx{background:var(--card);border:3px solid var(--ink);text-align:center;padding:4px 0;font-size:13px}
+.dx img{width:44px;display:block;margin:0 auto}.dx.no img{filter:brightness(0) opacity(.35)}
+.dx b{font-family:"Hiragino Maru Gothic ProN",sans-serif;font-size:16px}
+.center{text-align:center}.big{font-size:56px}.muted{color:var(--sub);font-size:14px;line-height:1.5}
+input.code{width:100%;border:4px solid var(--ink);padding:12px;font:inherit;font-size:20px;text-align:center;margin-top:12px;text-transform:uppercase}
+.hearts{letter-spacing:2px}
+</style></head><body><div class="app" id="app"></div>
+<script>
+const S=[{"id": "h0", "name": "あ行", "kind": "h", "kana": [{"c": "あ", "r": "a", "a": "audio/k_a.mp3"}, {"c": "い", "r": "i", "a": "audio/k_i.mp3"}, {"c": "う", "r": "u", "a": "audio/k_u.mp3"}, {"c": "え", "r": "e", "a": "audio/k_e.mp3"}, {"c": "お", "r": "o", "a": "audio/k_o.mp3"}], "boss": [{"w": "あい", "kj": "愛", "zh": "爱", "em": "💗", "a": "audio/b_h0_0.mp3"}, {"w": "うえ", "kj": "上", "zh": "上面", "em": "⬆️", "a": "audio/b_h0_1.mp3"}, {"w": "いえ", "kj": "家", "zh": "家", "em": "🏠", "a": "audio/b_h0_2.mp3"}]}, {"id": "h1", "name": "か行", "kind": "h", "kana": [{"c": "か", "r": "ka", "a": "audio/k_ka.mp3"}, {"c": "き", "r": "ki", "a": "audio/k_ki.mp3"}, {"c": "く", "r": "ku", "a": "audio/k_ku.mp3"}, {"c": "け", "r": "ke", "a": "audio/k_ke.mp3"}, {"c": "こ", "r": "ko", "a": "audio/k_ko.mp3"}], "boss": [{"w": "かお", "kj": "顔", "zh": "脸", "em": "😊", "a": "audio/b_h1_0.mp3"}, {"w": "えき", "kj": "駅", "zh": "车站", "em": "🚉", "a": "audio/b_h1_1.mp3"}, {"w": "あき", "kj": "秋", "zh": "秋天", "em": "🍁", "a": "audio/b_h1_2.mp3"}]}, {"id": "h2", "name": "さ行", "kind": "h", "kana": [{"c": "さ", "r": "sa", "a": "audio/k_sa.mp3"}, {"c": "し", "r": "shi", "a": "audio/k_shi.mp3"}, {"c": "す", "r": "su", "a": "audio/k_su.mp3"}, {"c": "せ", "r": "se", "a": "audio/k_se.mp3"}, {"c": "そ", "r": "so", "a": "audio/k_so.mp3"}], "boss": [{"w": "すし", "kj": "寿司", "zh": "寿司", "em": "🍣", "a": "audio/b_h2_0.mp3"}, {"w": "かさ", "kj": "傘", "zh": "伞", "em": "☂️", "a": "audio/b_h2_1.mp3"}, {"w": "いす", "kj": "椅子", "zh": "椅子", "em": "🪑", "a": "audio/b_h2_2.mp3"}]}, {"id": "h3", "name": "た行", "kind": "h", "kana": [{"c": "た", "r": "ta", "a": "audio/k_ta.mp3"}, {"c": "ち", "r": "chi", "a": "audio/k_chi.mp3"}, {"c": "つ", "r": "tsu", "a": "audio/k_tsu.mp3"}, {"c": "て", "r": "te", "a": "audio/k_te.mp3"}, {"c": "と", "r": "to", "a": "audio/k_to.mp3"}], "boss": [{"w": "くつ", "kj": "靴", "zh": "鞋子", "em": "👟", "a": "audio/b_h3_0.mp3"}, {"w": "した", "kj": "下", "zh": "下面", "em": "⬇️", "a": "audio/b_h3_1.mp3"}, {"w": "ちかてつ", "kj": "地下鉄", "zh": "地铁", "em": "🚇", "a": "audio/b_h3_2.mp3"}]}, {"id": "h4", "name": "な行", "kind": "h", "kana": [{"c": "な", "r": "na", "a": "audio/k_na.mp3"}, {"c": "に", "r": "ni", "a": "audio/k_ni.mp3"}, {"c": "ぬ", "r": "nu", "a": "audio/k_nu.mp3"}, {"c": "ね", "r": "ne", "a": "audio/k_ne.mp3"}, {"c": "の", "r": "no", "a": "audio/k_no.mp3"}], "boss": [{"w": "いぬ", "kj": "犬", "zh": "狗", "em": "🐶", "a": "audio/b_h4_0.mp3"}, {"w": "ねこ", "kj": "猫", "zh": "猫", "em": "🐱", "a": "audio/b_h4_1.mp3"}, {"w": "なつ", "kj": "夏", "zh": "夏天", "em": "🌻", "a": "audio/b_h4_2.mp3"}]}, {"id": "h5", "name": "は行", "kind": "h", "kana": [{"c": "は", "r": "ha", "a": "audio/k_ha.mp3"}, {"c": "ひ", "r": "hi", "a": "audio/k_hi.mp3"}, {"c": "ふ", "r": "fu", "a": "audio/k_fu.mp3"}, {"c": "へ", "r": "he", "a": "audio/k_he.mp3"}, {"c": "ほ", "r": "ho", "a": "audio/k_ho.mp3"}], "boss": [{"w": "はな", "kj": "花", "zh": "花", "em": "🌸", "a": "audio/b_h5_0.mp3"}, {"w": "ひと", "kj": "人", "zh": "人", "em": "🧍", "a": "audio/b_h5_1.mp3"}, {"w": "ふね", "kj": "船", "zh": "船", "em": "🚢", "a": "audio/b_h5_2.mp3"}]}, {"id": "h6", "name": "ま行", "kind": "h", "kana": [{"c": "ま", "r": "ma", "a": "audio/k_ma.mp3"}, {"c": "み", "r": "mi", "a": "audio/k_mi.mp3"}, {"c": "む", "r": "mu", "a": "audio/k_mu.mp3"}, {"c": "め", "r": "me", "a": "audio/k_me.mp3"}, {"c": "も", "r": "mo", "a": "audio/k_mo.mp3"}], "boss": [{"w": "あたま", "kj": "頭", "zh": "头", "em": "🙆", "a": "audio/b_h6_0.mp3"}, {"w": "さしみ", "kj": "刺身", "zh": "生鱼片", "em": "🐟", "a": "audio/b_h6_1.mp3"}, {"w": "むし", "kj": "虫", "zh": "虫子", "em": "🐛", "a": "audio/b_h6_2.mp3"}]}, {"id": "h7", "name": "や行", "kind": "h", "kana": [{"c": "や", "r": "ya", "a": "audio/k_ya.mp3"}, {"c": "ゆ", "r": "yu", "a": "audio/k_yu.mp3"}, {"c": "よ", "r": "yo", "a": "audio/k_yo.mp3"}], "boss": [{"w": "やま", "kj": "山", "zh": "山", "em": "⛰️", "a": "audio/b_h7_0.mp3"}, {"w": "ゆき", "kj": "雪", "zh": "雪", "em": "❄️", "a": "audio/b_h7_1.mp3"}, {"w": "ゆめ", "kj": "夢", "zh": "梦", "em": "💭", "a": "audio/b_h7_2.mp3"}]}, {"id": "h8", "name": "ら行", "kind": "h", "kana": [{"c": "ら", "r": "ra", "a": "audio/k_ra.mp3"}, {"c": "り", "r": "ri", "a": "audio/k_ri.mp3"}, {"c": "る", "r": "ru", "a": "audio/k_ru.mp3"}, {"c": "れ", "r": "re", "a": "audio/k_re.mp3"}, {"c": "ろ", "r": "ro", "a": "audio/k_ro.mp3"}], "boss": [{"w": "さくら", "kj": "桜", "zh": "樱花", "em": "🌸", "a": "audio/b_h8_0.mp3"}, {"w": "そら", "kj": "空", "zh": "天空", "em": "☁️", "a": "audio/b_h8_1.mp3"}, {"w": "くるま", "kj": "車", "zh": "汽车", "em": "🚗", "a": "audio/b_h8_2.mp3"}]}, {"id": "h9", "name": "わ行", "kind": "h", "kana": [{"c": "わ", "r": "wa", "a": "audio/k_wa.mp3"}, {"c": "を", "r": "wo", "a": "audio/k_wo.mp3"}, {"c": "ん", "r": "n", "a": "audio/k_n.mp3"}], "boss": [{"w": "わたし", "kj": "私", "zh": "我", "em": "🙋", "a": "audio/b_h9_0.mp3"}, {"w": "にほん", "kj": "日本", "zh": "日本", "em": "🗾", "a": "audio/b_h9_1.mp3"}, {"w": "ほん", "kj": "本", "zh": "书", "em": "📕", "a": "audio/b_h9_2.mp3"}]}, {"id": "k0", "name": "ア行", "kind": "k", "kana": [{"c": "ア", "r": "a", "a": "audio/k_a.mp3"}, {"c": "イ", "r": "i", "a": "audio/k_i.mp3"}, {"c": "ウ", "r": "u", "a": "audio/k_u.mp3"}, {"c": "エ", "r": "e", "a": "audio/k_e.mp3"}, {"c": "オ", "r": "o", "a": "audio/k_o.mp3"}], "boss": [{"w": "アイ", "kj": "AI", "zh": "AI 人工智能", "em": "🤖", "a": "audio/b_k0_0.mp3"}, {"w": "エア", "kj": "エア", "zh": "空气（air）", "em": "💨", "a": "audio/b_k0_1.mp3"}]}, {"id": "k1", "name": "カ行", "kind": "k", "kana": [{"c": "カ", "r": "ka", "a": "audio/k_ka.mp3"}, {"c": "キ", "r": "ki", "a": "audio/k_ki.mp3"}, {"c": "ク", "r": "ku", "a": "audio/k_ku.mp3"}, {"c": "ケ", "r": "ke", "a": "audio/k_ke.mp3"}, {"c": "コ", "r": "ko", "a": "audio/k_ko.mp3"}], "boss": [{"w": "ココア", "kj": "ココア", "zh": "可可", "em": "☕", "a": "audio/b_k1_0.mp3"}, {"w": "ケーキ", "kj": "ケーキ", "zh": "蛋糕", "em": "🍰", "a": "audio/b_k1_1.mp3"}]}, {"id": "k2", "name": "サ行", "kind": "k", "kana": [{"c": "サ", "r": "sa", "a": "audio/k_sa.mp3"}, {"c": "シ", "r": "shi", "a": "audio/k_shi.mp3"}, {"c": "ス", "r": "su", "a": "audio/k_su.mp3"}, {"c": "セ", "r": "se", "a": "audio/k_se.mp3"}, {"c": "ソ", "r": "so", "a": "audio/k_so.mp3"}], "boss": [{"w": "アイス", "kj": "アイス", "zh": "冰淇淋", "em": "🍦", "a": "audio/b_k2_0.mp3"}, {"w": "スキー", "kj": "スキー", "zh": "滑雪", "em": "⛷️", "a": "audio/b_k2_1.mp3"}]}, {"id": "k3", "name": "タ行", "kind": "k", "kana": [{"c": "タ", "r": "ta", "a": "audio/k_ta.mp3"}, {"c": "チ", "r": "chi", "a": "audio/k_chi.mp3"}, {"c": "ツ", "r": "tsu", "a": "audio/k_tsu.mp3"}, {"c": "テ", "r": "te", "a": "audio/k_te.mp3"}, {"c": "ト", "r": "to", "a": "audio/k_to.mp3"}], "boss": [{"w": "テスト", "kj": "テスト", "zh": "考试", "em": "📝", "a": "audio/b_k3_0.mp3"}, {"w": "タクシー", "kj": "タクシー", "zh": "出租车", "em": "🚕", "a": "audio/b_k3_1.mp3"}]}, {"id": "k4", "name": "ナ行", "kind": "k", "kana": [{"c": "ナ", "r": "na", "a": "audio/k_na.mp3"}, {"c": "ニ", "r": "ni", "a": "audio/k_ni.mp3"}, {"c": "ヌ", "r": "nu", "a": "audio/k_nu.mp3"}, {"c": "ネ", "r": "ne", "a": "audio/k_ne.mp3"}, {"c": "ノ", "r": "no", "a": "audio/k_no.mp3"}], "boss": [{"w": "テニス", "kj": "テニス", "zh": "网球", "em": "🎾", "a": "audio/b_k4_0.mp3"}, {"w": "ネクタイ", "kj": "ネクタイ", "zh": "领带", "em": "👔", "a": "audio/b_k4_1.mp3"}]}, {"id": "k5", "name": "ハ行", "kind": "k", "kana": [{"c": "ハ", "r": "ha", "a": "audio/k_ha.mp3"}, {"c": "ヒ", "r": "hi", "a": "audio/k_hi.mp3"}, {"c": "フ", "r": "fu", "a": "audio/k_fu.mp3"}, {"c": "ヘ", "r": "he", "a": "audio/k_he.mp3"}, {"c": "ホ", "r": "ho", "a": "audio/k_ho.mp3"}], "boss": [{"w": "コーヒー", "kj": "コーヒー", "zh": "咖啡", "em": "☕", "a": "audio/b_k5_0.mp3"}, {"w": "ハート", "kj": "ハート", "zh": "爱心", "em": "❤️", "a": "audio/b_k5_1.mp3"}]}, {"id": "k6", "name": "マ行", "kind": "k", "kana": [{"c": "マ", "r": "ma", "a": "audio/k_ma.mp3"}, {"c": "ミ", "r": "mi", "a": "audio/k_mi.mp3"}, {"c": "ム", "r": "mu", "a": "audio/k_mu.mp3"}, {"c": "メ", "r": "me", "a": "audio/k_me.mp3"}, {"c": "モ", "r": "mo", "a": "audio/k_mo.mp3"}], "boss": [{"w": "マスク", "kj": "マスク", "zh": "口罩", "em": "😷", "a": "audio/b_k6_0.mp3"}, {"w": "ミニ", "kj": "ミニ", "zh": "迷你", "em": "🤏", "a": "audio/b_k6_1.mp3"}]}, {"id": "k7", "name": "ヤ行", "kind": "k", "kana": [{"c": "ヤ", "r": "ya", "a": "audio/k_ya.mp3"}, {"c": "ユ", "r": "yu", "a": "audio/k_yu.mp3"}, {"c": "ヨ", "r": "yo", "a": "audio/k_yo.mp3"}], "boss": [{"w": "タイヤ", "kj": "タイヤ", "zh": "轮胎", "em": "🛞", "a": "audio/b_k7_0.mp3"}, {"w": "ヨーヨー", "kj": "ヨーヨー", "zh": "溜溜球", "em": "🪀", "a": "audio/b_k7_1.mp3"}]}, {"id": "k8", "name": "ラ行", "kind": "k", "kana": [{"c": "ラ", "r": "ra", "a": "audio/k_ra.mp3"}, {"c": "リ", "r": "ri", "a": "audio/k_ri.mp3"}, {"c": "ル", "r": "ru", "a": "audio/k_ru.mp3"}, {"c": "レ", "r": "re", "a": "audio/k_re.mp3"}, {"c": "ロ", "r": "ro", "a": "audio/k_ro.mp3"}], "boss": [{"w": "カメラ", "kj": "カメラ", "zh": "相机", "em": "📷", "a": "audio/b_k8_0.mp3"}, {"w": "ホテル", "kj": "ホテル", "zh": "酒店", "em": "🏨", "a": "audio/b_k8_1.mp3"}]}, {"id": "k9", "name": "ワ行", "kind": "k", "kana": [{"c": "ワ", "r": "wa", "a": "audio/k_wa.mp3"}, {"c": "ヲ", "r": "wo", "a": "audio/k_wo.mp3"}, {"c": "ン", "r": "n", "a": "audio/k_n.mp3"}], "boss": [{"w": "ワイン", "kj": "ワイン", "zh": "葡萄酒", "em": "🍷", "a": "audio/b_k9_0.mp3"}, {"w": "ラーメン", "kj": "ラーメン", "zh": "拉面", "em": "🍜", "a": "audio/b_k9_1.mp3"}]}],HS=["0129ab47a280e3cf", "0155d88018cdeaaa", "0212b7db48610a23", "02275f2e02c6512c", "02752a38cbb199f2", "028288c39fc5f86b", "031890dc201e14d6", "04373469335392fd", "04422d2c7461e936", "04ef114445b45a8e", "0540d8403ef4413a", "055d1982e0c123d0", "06843e3713dae42f", "07375336ee670714", "079bd78d9a1200b1", "07a890d556a64009", "07d250fe363f8c5c", "098dce98db7be412", "09c7af1d44110091", "09d9e23ca8e3f8a6", "0a9a6b8578c61189", "0abae20537753919", "0b5acc67ef02e35f", "0b628199831b660d", "0d6802f2f7550ba0", "0e2db8de276412ec", "0eaab5f8ff1ee122", "0f147983a1a87eeb", "0fca859d435a67a1", "10fffb8963ab9c6d", "129861dd0f1c56b1", "13ba40cd54ce23b1", "13d0062be82e8293", "141bdd6470da665e", "143b48a1d3df6c25", "14ce80316e24b305", "1512de32fa508ef0", "15eb5aa6e8544554", "16a1efe373f7e2ab", "184a441fe3eb9817", "1ae9a4426122e5a0", "1af1553abeeb6a28", "1e3c8575197cdb59", "21733a993777cd2d", "21ea3834dfc1e49e", "21ef951b59df30d3", "2297fe6a9c5cc278", "22f077be48b4dbac", "245ea143f75465cb", "2461cceab5bd7848", "256db6e86db6ab32", "25bac0dad6580188", "25e07b503dd900fa", "2774a0451fbeb009", "28ee36988f215692", "28f32b6a7753b818", "2962f75c36d74f96", "2982cbdb352354e3", "2c0d96fa6d8babc8", "2e69438b17967493", "30c99b554d385309", "316f21d01807b94a", "3191ee535e90dd7b", "31a166949b8fa4fe", "321a0b1252e30780", "333387b70aaa312f", "36d3686b8ba38ff3", "376d5aae7ca9215c", "37b75ad1384b0d95", "38936db3e277832b", "38d19b47fc229dbf", "391aa6f01e9f2eca", "392b217b0a7feeb3", "3a4b378a7a337ae8", "3c41be2993b024bd", "3c8d54de72826f9c", "3cf1fbc63be1ec34", "3ff08ae3da8e515b", "40088a65c32047b9", "4094ac0f77ccdde7", "415da6d5638a29a9", "419200d87803ef02", "41c8741c079d16a6", "431ca7ab7576be73", "43e9d33f10a1feb7", "43ea4969fa823dbd", "4614091fa0962557", "46eece6edd27da6c", "46fb5dc27db8b340", "47042a6023892d8a", "486eb1a557537249", "4879178ac587b3b8", "49037a38236c0172", "4a76916b4bc91c63", "4b085b59fc49231d", "508e1b272cdd6e8f", "50f8a1ccf8cf1386", "51006d23ae79960b", "519643dd38f649b1", "51ba75c5c111ec89", "531221ea470de118", "539d848a24c0f698", "54a11298c67ecdd2", "578ee0a492544c2e", "57a6095a6150ed98", "58212868c1209e82", "585ccfdf6b0846f7", "5a0d627a57745d38", "5a42bb19c0b16d9d", "5a741ddd4a1f3861", "5a9334cd52ff32a1", "5b149bbc33303b46", "5b6e004fb787b5c7", "5be99cb5c6b92309", "5c1bd397d57edb7f", "5c584b7b8b8bcee3", "5c7034b173a183e5", "5cc58e2b3f624623", "5d725667b6d3115f", "5d7ee57ebc0bbf6c", "5db80dc168155525", "5dbd5b5e84a4397c", "5e5f4d78d0b82442", "5f3c20d836101392", "5f72ae56cc1d1484", "607e6d32e00c2dc0", "60db4ec310f0d29b", "6361bafe3e3f5ccc", "636d2fd7d49cb59f", "644174b183eb69f5", "646c2112d694dae0", "672cd54a8000c0d8", "6aaea7c08f2f3daa", "6ab4948877b98be2", "6c152b49255d67fd", "6ca99e17a48a1c1f", "6d53565b251ac9a3", "6d57f629074e1d1d", "6fc3129f16553827", "701ee355d3a585c9", "70325ef34e5d161b", "729335fe6510db5c", "7351a7bac2d23f38", "73d2e319c9c8ff2d", "747ba3c837a57712", "7621e192802a15a0", "76d81b4a5dc65ae8", "76d856dad99c82c8", "771feaca65fabd48", "78d97cc9910b0a3d", "79756a221ef35420", "79c3b5a3f54863bb", "7a54375aedea3f98", "7a6a5f43d6cd1c0b", "7d74ae16324c0054", "7dbb65f5d807da59", "7f588f0d7a99fd31", "80a0aa51e1b81365", "84c3981bcd069d03", "84c4c8e3da4d266b", "852b5f82bd85a6c0", "856912a1e100abe5", "85bd45a064e209fa", "85bfc3716500c3c5", "85c78a41fec398b5", "86115920ec8f7e2a", "89cf8e463af85684", "8a3bcbb15a8c0e85", "8a4144e9d7a96bed", "8aef2a577ea1c84f", "8b2603321d883a70", "8c2d69a6a8c4d714", "8d57d280637d45fa", "8e0e6c7c1f7567b6", "8eea855a7e278918", "8f1ff1976dab603f", "8fe2bb6fab57d037", "9060a862b23735a0", "9063ed7dfefc3e01", "906ca0cf29c0b4a7", "911e7793fee97d3b", "951fe2aeb8d209fc", "95727088c2206772", "958006b83360ea82", "97a259cb86db11b3", "97e0cddc7e392a76", "98915e25e5259449", "9933acb97347089d", "9a25b66da4b4e771", "9aa2765b79695743", "9bde265f09bf8927", "9dc8e007d399ecff", "9e62d1c94d29070d", "9ea6fec7099b5c7f", "9f3aadef1e5504a7", "a24e6f1b756d3b93", "a2e68ace200dd7cc", "a2eff90ba151cf93", "a39d7f029ce44e50", "a3fced256568bb79", "a624e5149d3f233e", "a9818354d7e1cbae", "aa2a8849014097cd", "aa7c7c8a83a66398", "aaee6f1268265e50", "abc42957e6a634ff", "ac3a7e97a67c5c1f", "acc99d6fc367d2b7", "ada4f3cdbf565401", "ae27a553cb94420b", "ae6825ce765b35ec", "b0b1aa9b1678b9c3", "b2dd5c69da4caacd", "b557c9744dae704e", "b671799a35fb1df8", "b91b09a8ecf22f82", "b9320915c91f38d9", "b97a30a1ec52a6e5", "ba4093801584bc3a", "bc0ec2f7cbfff7af", "bdd6b06f968cb257", "bf44bd09d11fea5d", "c07cd8554eaac139", "c10263b767f122ff", "c24036d97c37954d", "c2447219ec63f0ed", "c2ae3151e8616195", "c2f341fa6622e808", "c345fad281969740", "c435afe9100fdc0d", "c561bd8c88293706", "c5e1df8af578c6d8", "c7bd771fba0d5e87", "c817a510e62c838a", "c850629c64c5a556", "c8670b1f4a31d4d7", "c91bf2d0776da29a", "c97c0cc5f0f19c19", "cb097fb2c076ca50", "cb42e18567af5119", "cb640a3c89ad0e46", "cbb44fa7d3bdfcbf", "cca9dfe6446988d4", "ce0a71d529723b29", "cea92c195ef2072d", "cfc00a1516b0c3c9", "cfeb9edade319988", "d0402c2c10201106", "d05c810c346d2d26", "d2473a74b424d4de", "d2f400f5eb457319", "d3d5e8300b1d7aca", "d45752f3ca73ee1b", "d4b8b6f51a851009", "d89513312f2515e5", "d9cd39ba84b599b8", "daf4e1efc4ba13f7", "dbdad7f851b51d72", "dd0fc374fe558e4e", "dd37eb9c95c79a86", "dd4ed08f87b9c787", "dd5291efbccd3f17", "ddb2f5207ce09daa", "ddccadee381df3dc", "ddfedfc39cef435b", "de2e269a11a7e6b8", "de7d90a4c519ba7e", "de90fcc6ca13c234", "df09cb182c019c62", "dfdd3c74e5bf317e", "e05705fb56ab17c3", "e080f154bdc5515e", "e0c390fd0d817921", "e1806a773244bccf", "e384b1f37e6d0b0b", "e3cca15225f67ce0", "e3ea9ae3829f338b", "e426b74191ed0e35", "e4e57039039cdb7d", "e5ed6608bbd46712", "e727a0be1f32c5fc", "e9762dcc1565f106", "e98f5c257ae0fc29", "eb469f9019f03b4a", "ebf6e23877935bb2", "ec22e2ce64ff5c4c", "ec667df5a429bd09", "ef30d19e433f6eac", "f04ed03e961148ac", "f3730b7e21897f1c", "f3839f9dd4588cd1", "f88ce9923526af70", "f8af375f450be3d7", "f924e4642ca9f07e", "f9b439bb68322af3", "f9cebd582d7d6292", "fc03440791ef6c7f", "fc3372c7eb0bec9f", "fcee1753ac91fdfb", "ff5d1343c466d3fb"],FREE=3,WAVES=8;
+const $=id=>document.getElementById(id),app=$('app');
+// ---------- 存档 ----------
+const today=()=>new Date().toISOString().slice(0,10);
+let sv;try{sv=JSON.parse(localStorage.getItem('kana_save'))}catch(e){}
+sv=Object.assign({coins:0,stars:{},dex:{},miss:{},un:false},sv||{});
+const save=()=>{try{localStorage.setItem('kana_save',JSON.stringify(sv))}catch(e){}};
+// ---------- 声音 ----------
+let au=new Audio(),AC=null;
+function play(src){try{au.pause();au=new Audio(src);au.play().catch(()=>{})}catch(e){}}
+function beep(seq){try{AC=AC||new (window.AudioContext||window.webkitAudioContext)();let t=AC.currentTime;
+for(const [f,d,type] of seq){const o=AC.createOscillator(),g=AC.createGain();o.type=type||'square';o.frequency.value=f;g.gain.setValueAtTime(.08,t);g.gain.exponentialRampToValueAtTime(.001,t+d);o.connect(g);g.connect(AC.destination);o.start(t);o.stop(t+d);t+=d*.8}}catch(e){}}
+const SFX={hit:()=>beep([[660,.06],[990,.09]]),no:()=>beep([[180,.18,'sawtooth']]),hurt:()=>beep([[220,.1,'sawtooth'],[110,.2,'sawtooth']]),
+ win:()=>beep([[523,.1],[659,.1],[784,.1],[1047,.25]]),boss:()=>beep([[110,.15,'sawtooth'],[98,.15,'sawtooth'],[82,.3,'sawtooth']]),coin:()=>beep([[988,.05],[1319,.12]])};
+// ---------- 像素怪兽（按假名生成，每只都不一样）----------
+const PAL={h:['#ff6b6b','#ffa94d','#ffd43b','#69db7c','#38d9a9','#4dabf7','#748ffc','#da77f2','#f783ac','#a9e34b'],k:['#c92a2a','#e8590c','#f08c00','#2b8a3e','#087f5b','#1864ab','#364fc7','#862e9c','#a61e4d','#5c940d']};
+const cache={};
+function rng(seed){let x=0;for(const c of seed)x=(x*31+c.charCodeAt(0))>>>0;return()=>{x^=x<<13;x>>>=0;x^=x>>17;x^=x<<5;x>>>=0;return x/4294967296}}
+function sprite(seed,col,n){const key=seed+n+col;if(cache[key])return cache[key];const r=rng(seed),h=Math.ceil(n/2),g=[];
+for(let y=0;y<n;y++){g.push([]);for(let x=0;x<h;x++){const d=Math.abs(x-h+.5)/h,yy=y/n;g[y].push(r()<(.75-d*.55-(yy<.15||yy>.9?.35:0))?1:0)}}
+for(let y=1;y<n-1;y++)for(let x=1;x<h;x++)if(g[y][x]&&r()<.15)g[y][x]=2;
+const ey=Math.floor(n*.32),ex=Math.max(1,h-3);g[ey][ex]=3;g[ey+1][ex]=3;g[ey][ex-1]=1;g[ey+1][ex-1]=1;
+const legs=Math.floor(r()*h);g[n-1][legs]=1;g[n-1][Math.max(0,legs-2)]=1;
+const c=document.createElement('canvas');c.width=c.height=n;const x2=c.getContext('2d');
+const dark=shade(col,-.35),light=shade(col,.35);
+for(let y=0;y<n;y++)for(let x=0;x<h;x++){const v=g[y][x];if(!v)continue;x2.fillStyle=v===1?col:v===2?light:'#1d1b2e';x2.fillRect(x,y,1,1);x2.fillRect(n-1-x,y,1,1)}
+// 描边
+const id=x2.getImageData(0,0,n,n),o=document.createElement('canvas');o.width=o.height=n+2;const ox=o.getContext('2d');ox.fillStyle=dark;
+for(let y=0;y<n;y++)for(let x=0;x<n;x++)if(id.data[(y*n+x)*4+3])ox.fillRect(x,y,3,3);ox.drawImage(c,1,1);
+return cache[key]=o.toDataURL()}
+function shade(hex,p){const n=parseInt(hex.slice(1),16);let r=n>>16,g=n>>8&255,b=n&255;const f=v=>Math.max(0,Math.min(255,Math.round(p<0?v*(1+p):v+(255-v)*p)));return'#'+[f(r),f(g),f(b)].map(v=>v.toString(16).padStart(2,'0')).join('')}
+const monImg=(ch,kind,row)=>sprite('m'+ch,PAL[kind][(row*3+ch.charCodeAt(0))%10],12);
+const HERO=['....kkk...','...kyyyk..','..kyyyyyk.','..kffffk..','..kfkfkf..','..kffffk..','...kffk...','..kbbbbk..','.kfbbbbfk.','..kbbbbk..','..kb..bk..','..kk..kk..'];
+function heroImg(){if(cache.hero)return cache.hero;const c=document.createElement('canvas');c.width=10;c.height=12;const x=c.getContext('2d'),C={k:'#1d1b2e',y:'#ff4d5e',f:'#ffd8b5',b:'#2f6bff'};
+HERO.forEach((r,y)=>[...r].forEach((v,i)=>{if(C[v]){x.fillStyle=C[v];x.fillRect(i,y,1,1)}}));return cache.hero=c.toDataURL()}
+// ---------- 工具 ----------
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+const k2h=s=>s.replace(/[ァ-ヶ]/g,c=>String.fromCharCode(c.charCodeAt(0)-96));
+const rowOf=ch=>S.findIndex(s=>s.kana.some(k=>k.c===ch));
+const kanaInfo=ch=>{for(const s of S)for(const k of s.kana)if(k.c===ch)return Object.assign({kind:s.kind,row:+s.id.slice(1)},k)};
+const locked=i=>i>=FREE&&!sv.un;
+const hearts=n=>'❤️'.repeat(n)+'🖤'.repeat(Math.max(0,3-n));
+let G=null,raf=0;
+// ---------- 首页 ----------
+function home(){cancelAnimationFrame(raf);G=null;const got=Object.keys(sv.dex).length;
+const revN=Object.entries(sv.miss).filter(([c,d])=>d<today()).length;
+const node=(s,i)=>`<div class="st ${locked(i)?'lk':''}" onclick="enter(${i})">${s.kana[0].c}<small>${'★'.repeat(sv.stars[s.id]||0)}</small></div>`;
+app.innerHTML=`<div class="hdr"><span class="pill">🪙 ${sv.coins}</span><span class="pill" onclick="dex()" style="cursor:pointer">📖 图鉴 ${got}/92</span></div>
+<h1>假名<b>怪兽</b><br>图鉴</h1><div class="tag">听声音，打怪兽，收集 92 只假名怪兽</div>
+${revN?`<div class="rev" onclick="revenge()"><span style="font-size:32px">😈</span><span>复仇怪来袭！<br><small>昨天放跑的 ${revN} 只又回来了</small></span></div>`:''}
+<div class="sec">🌸 平假名之森</div><div class="map">${S.slice(0,10).map((s,i)=>node(s,i)).join('')}</div>
+<div class="sec">⚡ 片假名之城</div><div class="map">${S.slice(10).map((s,i)=>node(s,i+10)).join('')}</div>
+<div class="box" style="margin-top:14px;font-size:14px;line-height:1.6">🎮 玩法：怪兽冲过来时会喊出一个假名，<b>听声音点中对的那只</b>。<br>👑 每关最后有 BOSS，要拼对一个日语单词才能打败，${(window.SpeechRecognition||window.webkitSpeechRecognition)?'也可以🎤<b>开口说</b>直接秒杀。':'换 Safari/Chrome 打开还能🎤开口说秒杀。'}<br>😈 放跑的怪兽第二天会回来复仇。</div>
+${sv.un?'':`<button class="btn w" onclick="lock()">🔑 输入兑换码，解锁全部 20 关</button><div class="muted center" style="margin-top:6px">あ・か・さ 三行免费玩</div>`}`}
+function enter(i){if(locked(i))return lock();start(S[i],false)}
+function revenge(){const pool=Object.entries(sv.miss).filter(([c,d])=>d<today()).map(([c])=>kanaInfo(c)).filter(Boolean);
+if(!pool.length)return home();start({id:'rev',name:'复仇怪',kind:'h',kana:pool,boss:[]},true)}
+// ---------- 打怪 ----------
+function start(st,rev){const pool=st.kana.slice(),idx=S.indexOf(st);
+const prev=idx>0?S.slice(st.kind==='h'?0:10,idx).flatMap(s=>s.kana):[];
+G={st,rev,idx,pool,prev,seq:[],wave:0,hp:3,combo:0,best:0,coins:0,caught:new Set(),mons:[],waves:rev?Math.min(12,pool.length*2):WAVES};
+app.innerHTML=`<div class="hdr"><span class="pill" onclick="home()" style="cursor:pointer">✖</span><span class="pill">${st.name}</span><span class="pill hearts" id="hp">${hearts(3)}</span><span class="pill">🪙 <span id="cn">0</span></span></div>
+<div class="arena" id="ar"><div class="wave" id="wv"></div><div class="combo" id="cb"></div><img class="hero px" src="${heroImg()}"></div>
+<div class="prompt"><div class="box" id="pm">🔊 听！是哪一只？</div><button class="ear" onclick="G&&G.t&&play(G.t.a)">🔊</button></div>
+<div class="muted center" style="margin-top:8px">点中刚才喊出声音的怪兽 · 别让它碰到你</div>`;
+setTimeout(nextWave,600)}
+function nextWave(){if(!G)return;if(G.wave>=G.waves)return G.st.boss.length?bossIntro():finish(true);G.wave++;
+const ar=$('ar');G.mons.forEach(m=>m.el.remove());G.mons=[];
+if(!G.seq.length)G.seq=shuffle(G.pool);const t=G.seq.pop();let others=shuffle([...G.pool,...(G.prev.length?shuffle(G.prev).slice(0,3):[])].filter(k=>k.c!==t.c)).slice(0,2);
+while(others.length<2)others.push(pick(S[0].kana.filter(k=>k.c!==t.c&&!others.includes(k))));
+G.t=t;const set=shuffle([t,...others]),speed=(9-Math.min(4,G.wave*.4+(G.idx%10)*.15))*1000;
+set.forEach((k,lane)=>{const ki=kanaInfo(k.c)||{kind:'h',row:0},el=document.createElement('div');el.className='mon';
+el.innerHTML=`<img class="px" src="${monImg(k.c,ki.kind,ki.row)}"><span class="k">${k.c}</span>`;el.style.top=(18+lane*100)+'px';
+el.onpointerdown=e=>{e.preventDefault();tap(m)};ar.appendChild(el);
+const m={k,el,x:ar.clientWidth+lane*40,dead:false,v:(ar.clientWidth+40)/speed};G.mons.push(m)});
+$('wv').textContent=`第 ${G.wave}/${G.waves} 波`;$('pm').innerHTML='🔊 听！是哪一只？';play(t.a);
+let last=performance.now();cancelAnimationFrame(raf);
+const step=now=>{if(!G)return;const dt=now-last;last=now;let lose=false;
+for(const m of G.mons){if(m.dead)continue;m.x-=m.v*dt;m.el.style.left=m.x+'px';if(m.k===G.t&&m.x<58)lose=true}
+if(lose)return hurt();raf=requestAnimationFrame(step)};raf=requestAnimationFrame(step)}
+function tap(m){if(!G||m.dead)return;const ar=$('ar');
+if(m.k===G.t){m.dead=true;m.el.classList.add('hit');SFX.hit();G.combo++;G.best=Math.max(G.best,G.combo);const c=5+Math.min(G.combo,10);G.coins+=c;
+G.caught.add(m.k.c);if(G.rev)delete sv.miss[m.k.c];
+floatTxt(ar,m.x+20,parseInt(m.el.style.top),`+${c}`);$('cn').textContent=G.coins;$('cb').textContent=G.combo>1?`${G.combo} 连击!`:'';
+$('pm').innerHTML=`✅ <b style="font-family:sans-serif">${m.k.c}</b> = ${m.k.r}`;
+G.mons.forEach(o=>{if(!o.dead){o.dead=true;o.el.classList.add('bye')}});cancelAnimationFrame(raf);setTimeout(nextWave,750)}
+else{m.el.classList.remove('no');void m.el.offsetWidth;m.el.classList.add('no');SFX.no();G.combo=0;$('cb').textContent='';
+$('pm').innerHTML=`❌ 这只是 <b style="font-family:sans-serif">${m.k.c}</b>（${m.k.r}），再听一次`;play(G.t.a);G.mons.forEach(o=>{if(o.k===G.t)o.x-=0;else o.v*=1});m.x+=0}}
+function hurt(){cancelAnimationFrame(raf);const ar=$('ar');ar.classList.remove('hurt');void ar.offsetWidth;ar.classList.add('hurt');SFX.hurt();
+G.hp--;G.combo=0;$('hp').textContent=hearts(G.hp);sv.miss[G.t.c]=today();save();
+$('pm').innerHTML=`💥 被撞了！刚才是 <b style="font-family:sans-serif">${G.t.c}</b>（${G.t.r}）`;
+G.mons.forEach(o=>{o.dead=true;o.el.classList.add('bye')});setTimeout(()=>G.hp<=0?finish(false):nextWave(),1300)}
+function floatTxt(ar,x,y,t){const f=document.createElement('div');f.className='float';f.style.left=x+'px';f.style.top=y+'px';f.textContent=t;ar.appendChild(f);setTimeout(()=>f.remove(),800)}
+// ---------- BOSS ----------
+function bossIntro(){const b=pick(G.st.boss);G.b=b;G.got=0;const chars=[...b.w];
+const extra=shuffle([...G.pool,...G.prev].map(k=>k.c).filter(c=>!chars.includes(c))).slice(0,Math.max(2,8-chars.length));
+G.tiles=shuffle([...chars,...extra]);SFX.boss();const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+app.innerHTML=`<div class="hdr"><span class="pill">${G.st.name} BOSS</span><span class="pill hearts" id="hp">${hearts(G.hp)}</span><span class="pill">🪙 <span id="cn">${G.coins}</span></span></div>
+<div class="boss" id="bs"><img class="px" src="${sprite('B'+b.w,PAL[G.st.kind][(G.idx+3)%10],16)}">
+<div class="hp" id="bh">${chars.map(()=>'<i></i>').join('')}</div>
+<div class="box" style="display:inline-block;font-size:18px">${b.em} 「${b.zh}」用日语怎么说？ <button class="ear" style="width:44px;height:38px;font-size:17px" onclick="play('${b.a}')">🔊</button></div></div>
+<div class="slots" id="sl">${chars.map(()=>'<div class="slot"></div>').join('')}</div>
+<div class="tbar"><i id="tb" style="width:100%"></i></div>
+<div class="tiles" id="tl">${G.tiles.map((c,i)=>`<button class="tile" id="t${i}" onclick="tile(${i})">${c}</button>`).join('')}</div>
+${SR?'<button class="btn mic" id="mic" onclick="listen()">🎤 开口说出来，直接秒杀！</button>':''}
+<div class="muted center" id="bm" style="margin-top:8px">按顺序点假名，拼出这个词</div>`;
+setTimeout(()=>play(b.a),500);const T=25000,t0=Date.now();clearInterval(G.tm);
+G.tm=setInterval(()=>{const l=1-(Date.now()-t0)/T;$('tb').style.width=Math.max(0,l*100)+'%';if(l<=0){clearInterval(G.tm);bossHit()}},100)}
+function tile(i){if(!G||!G.b)return;const c=G.tiles[i],need=[...G.b.w][G.got],el=$('t'+i);
+if(c===need){el.classList.add('used');const s=$('sl').children[G.got];s.textContent=c;s.classList.add('on');$('bh').children[G.got].classList.add('off');G.got++;SFX.hit();
+const bs=$('bs');bs.classList.remove('dmg');void bs.offsetWidth;bs.classList.add('dmg');if(G.got===[...G.b.w].length)bossDown(false)}
+else{el.classList.remove('no');void el.offsetWidth;el.classList.add('no');SFX.no();$('bm').textContent=`不对，第 ${G.got+1} 个音是？点🔊再听一遍`}}
+function bossHit(){if(!G)return;G.hp--;SFX.hurt();$('hp').textContent=hearts(G.hp);
+const ar=$('bs');ar.classList.add('dmg');$('bm').innerHTML=`⏰ 时间到！BOSS 反击。答案是 <b style="font-family:sans-serif;font-size:20px">${G.b.w}</b>`;
+$('sl').innerHTML=[...G.b.w].map(c=>`<div class="slot on">${c}</div>`).join('');play(G.b.a);setTimeout(()=>G.hp<=0?finish(false):finish(true,true),2200)}
+function bossDown(voice){clearInterval(G.tm);SFX.win();const bonus=voice?60:30;G.coins+=bonus;G.bossWin=voice?'voice':'tap';
+$('bm').innerHTML=voice?`🎤 说对了！BOSS 秒杀 +${bonus}🪙`:`🎉 打败 BOSS！+${bonus}🪙`;$('cn').textContent=G.coins;
+$('sl').innerHTML=[...G.b.w].map(c=>`<div class="slot on">${c}</div>`).join('');play(G.b.a);
+$('bs').querySelector('img').style.animation='pop .8s forwards';setTimeout(()=>finish(true),1600)}
+function listen(){const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR)return;const r=new SR();r.lang='ja-JP';r.interimResults=false;r.maxAlternatives=5;
+const btn=$('mic');btn.classList.add('on');btn.textContent='🎤 请说…';
+r.onresult=e=>{const alts=[...e.results[0]].map(a=>a.transcript.replace(/[\s。、！？]/g,''));const w=k2h(G.b.w).replace(/ー/g,''),kj=G.b.kj.toLowerCase();
+const okv=alts.some(a=>{const h=k2h(a).replace(/ー/g,'').toLowerCase();return h.includes(w)||a.toLowerCase().includes(kj)||h.includes(k2h(kj))});
+if(okv)bossDown(true);else{SFX.no();btn.classList.remove('on');btn.textContent='🎤 再说一次';$('bm').textContent=`听到的是「${alts[0]||'…'}」，再试一次，或者点假名拼出来`}};
+r.onerror=()=>{btn.classList.remove('on');btn.textContent='🎤 没听清，再说一次';$('bm').textContent='这个浏览器可能不支持语音，点假名拼出来也可以'};
+r.onend=()=>{btn.classList.remove('on');if(btn.textContent==='🎤 请说…')btn.textContent='🎤 再说一次'};try{r.start()}catch(e){}}
+// ---------- 结算 ----------
+function finish(win,timeout){cancelAnimationFrame(raf);clearInterval(G&&G.tm);const st=G.st;const fresh=[...G.caught].filter(c=>!sv.dex[c]);
+G.caught.forEach(c=>sv.dex[c]=1);sv.coins+=G.coins;const star=win?Math.max(1,G.hp):0;if(st.id!=='rev'&&star>(sv.stars[st.id]||0))sv.stars[st.id]=star;save();
+const next=G.idx>=0&&G.idx<S.length-1?G.idx+1:-1;SFX.coin();
+app.innerHTML=`<h1>${win?'通关！':'失败了…'}</h1><div class="box center">
+<div class="big">${win?'★'.repeat(star)+'☆'.repeat(3-star):'💀'}</div>
+<div style="font-size:18px;margin-top:6px">🪙 +${G.coins} · 最高 ${G.best} 连击</div>
+${fresh.length?`<div style="margin-top:12px;font-size:16px">📖 新收服 ${fresh.length} 只怪兽！</div><div class="dex">${fresh.map(c=>{const k=kanaInfo(c);return`<div class="dx"><img class="px" src="${monImg(c,k.kind,k.row)}"><b>${c}</b><br>${k.r}</div>`}).join('')}</div>`:''}
+${!win?`<div class="muted" style="margin-top:10px">被撞到的怪兽明天会回来复仇 😈</div>`:''}</div>
+${win&&next>=0&&st.id!=='rev'?`<button class="btn" onclick="enter(${next})">下一关：${S[next].name} ➜</button>`:''}
+<button class="btn w" onclick="${st.id==='rev'?'revenge()':`enter(${Math.max(0,G.idx)})`}">再打一次 🔁</button>
+<button class="btn w" onclick="home()">回到地图</button>`;G=null}
+// ---------- 图鉴 ----------
+function dex(){const all=S.flatMap(s=>s.kana.map(k=>Object.assign({kind:s.kind,row:+s.id.slice(1)},k)));const got=all.filter(k=>sv.dex[k.c]).length;
+app.innerHTML=`<div class="hdr"><span class="pill" onclick="home()" style="cursor:pointer">← 返回</span><span class="pill">📖 已收服 ${got} / ${all.length}</span></div>
+<h1 style="font-size:30px">怪兽<b>图鉴</b></h1>
+<div class="sec">🌸 平假名</div><div class="dex">${all.filter(k=>k.kind==='h').map(cell).join('')}</div>
+<div class="sec">⚡ 片假名</div><div class="dex">${all.filter(k=>k.kind==='k').map(cell).join('')}</div>`}
+function cell(k){const g=sv.dex[k.c];return`<div class="dx ${g?'':'no'}" ${g?`onclick="play('${k.a}')"`:''}><img class="px" src="${monImg(k.c,k.kind,k.row)}"><b>${g?k.c:'？'}</b><br>${g?k.r:'???'}</div>`}
+// ---------- 解锁 ----------
+function fnv(x){let h=0x811c9dc5,h2=0x1234567;for(const c of new TextEncoder().encode('kana1'+x))h=Math.imul(h^c,0x01000193)>>>0;for(const c of new TextEncoder().encode(x+'mon'))h2=Math.imul(h2^c,0x01000193)>>>0;return h.toString(16).padStart(8,'0')+h2.toString(16).padStart(8,'0')}
+function lock(){app.innerHTML=`<h1>解锁<b>全部关卡</b></h1><div class="box center"><div class="big">🔒</div>
+<div style="font-size:16px;line-height:1.7;margin-top:6px">平假名 10 关 + 片假名 10 关<br>92 只怪兽 · 50 个 BOSS 单词 · 开口秒杀<br>一次解锁，这台设备永久可玩</div>
+<input class="code" id="cd" placeholder="KANA-XXXX-XXXX" autocomplete="off"><div id="msg" class="muted" style="margin-top:8px"></div>
+<button class="btn red" onclick="redeem()">解锁 🔑</button></div><button class="btn w" onclick="home()">返回地图</button>`}
+function redeem(){const c=$('cd').value.trim().toUpperCase().replace(/\s/g,'');if(HS.includes(fnv(c))){sv.un=true;save();$('msg').textContent='✅ 解锁成功！';SFX.win();setTimeout(home,700)}else{$('msg').textContent='❌ 兑换码不对，请检查后重新输入';SFX.no()}}
+home();
+</script></body></html>
