@@ -1,0 +1,45 @@
+<!doctype html><html lang="zh"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>考频地图 音频</title><style>
+:root{--bg:#eef3f8;--card:#fff;--ink:#1d2b45;--ac:#2f6fd6;--mute:#7a8596;--line:#d5deea}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,"PingFang SC","Hiragino Sans",sans-serif}
+header{position:sticky;top:0;background:var(--ink);color:#fff;padding:10px 16px;z-index:2}
+header .t{font-weight:700;font-size:16px}header small{display:block;opacity:.75;font-size:12px;margin-top:2px}
+.bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:8px}
+.bar button,.bar select{height:36px;border-radius:10px;border:0;font-size:14px;padding:0 12px}
+.bar .nav{background:#33476b;color:#fff}.bar select{background:#fff;color:var(--ink);flex:1;min-width:0}
+.bar .all{background:var(--ac);color:#fff;font-weight:600;flex-basis:100%}
+main{max-width:640px;margin:0 auto;padding:8px 16px 60px}
+.r{display:flex;gap:12px;align-items:center;background:var(--card);border:2px solid var(--line);border-radius:14px;padding:10px 12px;margin:8px 0;scroll-margin-top:120px}
+.r.on{border-color:var(--ac);box-shadow:0 0 0 3px #2f6fd640}
+.pl{flex:none;width:44px;height:44px;border-radius:50%;border:0;background:var(--ac);display:grid;place-items:center}
+.pl.p{background:var(--ink)}.pl svg{width:18px;height:18px;fill:#fff}
+.no{flex:none;font-size:12px;color:var(--mute);width:38px;font-variant-numeric:tabular-nums}
+.tx{min-width:0}.w{font-size:17px;font-weight:600}.k{font-size:13px;color:var(--mute);margin-left:6px;font-weight:400}.zh{font-size:13px;color:#4a5568;margin-top:2px}
+.empty{padding:40px 0;text-align:center;color:var(--mute)}
+</style></head><body><header><div class="t" id="tt">考频地图</div><small id="sub">点圆形按钮听 · rakiの日本語教室</small>
+<div class="bar"><button class="nav" id="pv">上一页</button><select id="sel"></select><button class="nav" id="nx">下一页</button><button class="all" id="all">连播本页</button></div></header>
+<main id="m"></main><script>
+const PLAY='<svg viewBox="0 0 24 24"><path d="M7 4.5v15l13-7.5z"/></svg>',PAUSE='<svg viewBox="0 0 24 24"><path d="M6 4h4v16H6zM14 4h4v16h-4z"/></svg>';
+const au=new Audio();let D,keys,pg,cur=null,queue=[],q=new URLSearchParams(location.search);
+const pad=n=>String(n).padStart(4,'0');
+function mark(b,on){if(!b)return;b.innerHTML=on?PAUSE:PLAY;b.classList.toggle('p',on);b.closest('.r').classList.toggle('on',on)}
+function play(b){if(cur)mark(cur,false);cur=b;mark(b,true);au.src='audio/'+pad(b.dataset.n)+'.mp3';au.play();b.closest('.r').scrollIntoView({block:'center',behavior:'smooth'})}
+function stop(){au.pause();if(cur)mark(cur,false);cur=null;queue=[];allBtn(false)}
+function allBtn(on){document.getElementById('all').textContent=on?'停止连播':'连播本页'}
+au.onended=()=>{if(cur)mark(cur,false);const nx=queue.shift();if(nx)play(nx);else{cur=null;allBtn(false)}};
+function show(p){stop();pg=p;history.replaceState(null,'','?p='+p);document.getElementById('sel').value=p;
+ const m=document.getElementById('m');m.innerHTML='';
+ (D.pages[p]||[]).forEach(([n,w,k,zh])=>{const r=document.createElement('div');r.className='r';r.id='n'+n;
+  r.innerHTML=`<button class="pl" data-n="${n}">${PLAY}</button><div class="no">No.${n}</div><div class="tx"><div class="w">${w}<span class="k">${k}</span></div><div class="zh">${zh}</div></div>`;m.appendChild(r)});
+ m.querySelectorAll('.pl').forEach(b=>b.onclick=()=>{queue=[];allBtn(false);if(cur===b&&!au.paused){stop();return}play(b)});
+ window.scrollTo(0,0);
+ const n=q.get('n');if(n){const el=document.getElementById('n'+n);if(el){el.classList.add('on');el.scrollIntoView({block:'center'})}q.delete('n')}}
+fetch('data.json').then(r=>r.json()).then(d=>{D=d;keys=Object.keys(d.pages).map(Number).sort((a,b)=>a-b);
+ document.title=d.title+' 音频';document.getElementById('tt').textContent=d.title+'｜'+d.total+' 条音频';document.getElementById('sub').textContent='点圆形按钮听 · 先读'+(d.title.includes('文法')?'文法':'单词')+'，再读例句 · rakiの日本語教室';
+ const s=document.getElementById('sel');keys.forEach(k=>{const o=document.createElement('option');const L=d.pages[k];o.value=k;o.textContent=`第 ${k} 页 · No.${L[0][0]}–${L[L.length-1][0]}`;s.appendChild(o)});
+ s.onchange=()=>show(+s.value);
+ document.getElementById('pv').onclick=()=>{const i=keys.indexOf(pg);if(i>0)show(keys[i-1])};
+ document.getElementById('nx').onclick=()=>{const i=keys.indexOf(pg);if(i<keys.length-1)show(keys[i+1])};
+ document.getElementById('all').onclick=()=>{if(queue.length||(cur&&!au.paused)){stop();return}const bs=[...document.querySelectorAll('.pl')];if(!bs.length)return;queue=bs.slice(1);allBtn(true);play(bs[0])};
+ const p=+q.get('p');show(keys.includes(p)?p:keys[0])});
+</script></body></html>
