@@ -108,7 +108,7 @@ app.innerHTML=`<div class="card"><div class="small" style="margin-top:0">结局 
 <button class="btn alt" onclick="start()">再过一天 🔁</button>`;scrollTo(0,0)}
 function fnv(x){let h=0x811c9dc5,h2=0x1234567;const a=new TextEncoder().encode('rk1day'+x),b=new TextEncoder().encode(x+'jp');
 for(const c of a)h=Math.imul(h^c,0x01000193)>>>0;for(const c of b)h2=Math.imul(h2^c,0x01000193)>>>0;return h.toString(16).padStart(8,'0')+h2.toString(16).padStart(8,'0')}
-function ok(){try{return localStorage.getItem('adj_cn_unlock')==='1'}catch(e){return false}}
+function ok(){return true}
 function lock(){clearInterval(tm);app.className='app';app.innerHTML=`<div class="card lock"><div class="em">🔒</div><div class="ttl">免费试玩结束</div>
 <div class="small">输入兑换码，解锁完整的一天：<br><b>13 个场景 · 分支剧情 · 5 种结局 · 困难模式</b><br>一次解锁，这台设备永久可玩。</div>
 <input id="cd" placeholder="DAY-XXXX" autocomplete="off"><div id="msg" class="small"></div>

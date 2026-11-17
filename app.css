@@ -278,7 +278,7 @@ u.kw.w{border-bottom-color:#6ea9c8}
 .games{margin-top:14px}
 .games-h{font-size:15px;font-weight:900;margin-bottom:8px}
 .games-h small{font-size:12px;color:var(--mute);font-weight:600;margin-left:8px}
-.games-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.games-row{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
 .games-row a{display:flex;flex-direction:column;align-items:center;text-align:center;gap:3px;background:var(--g);border-radius:16px;padding:12px 6px;text-decoration:none;color:var(--navy);box-shadow:var(--lift)}
 .games-row i{font-style:normal;font-size:28px}
 .games-row b{font-size:14.5px;font-weight:900}

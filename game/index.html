@@ -121,6 +121,6 @@ try{if(stars>best())localStorage.setItem('kb_best',stars)}catch(e){}
 app.innerHTML=`<div class="panel" style="text-align:center;margin-top:20px"><div style="font-size:60px">${r[0]}</div><h3 style="font-size:24px">${r[1]}</h3><p class="lead" style="font-size:15px">${r[2]}</p>
 <p style="font-size:40px;font-weight:900;color:var(--brand);margin-top:8px">${stars} / ${max} ⭐</p><p class="lead" style="font-size:13px;color:var(--sub)">📸 截图记录今天的成绩</p></div>
 ${lessons.length?`<div class="panel"><b>今天没听懂的话</b><ul>${lessons.map(x=>`<li class="jp">${x}</li>`).join('')}</ul></div>`:''}
-<button class="go" onclick="day()">再上一次班 🔁</button>`;scrollTo(0,0)}
+<button class="go" onclick="day()">再上一次班 🔁</button><a class="go" style="display:block;text-align:center;text-decoration:none;margin-top:12px" href="../oneday/">下一关：在日本过一天 🇯🇵 ➜</a>`;scrollTo(0,0)}
 start();
 </script></body></html>
