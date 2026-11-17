@@ -111,7 +111,7 @@ for(const c of a)h=Math.imul(h^c,0x01000193)>>>0;for(const c of b)h2=Math.imul(h
 function ok(){try{return localStorage.getItem('adj_cn_unlock')==='1'}catch(e){return false}}
 function lock(){clearInterval(tm);app.className='app';app.innerHTML=`<div class="card lock"><div class="em">🔒</div><div class="ttl">免费试玩结束</div>
 <div class="small">输入兑换码，解锁完整的一天：<br><b>13 个场景 · 分支剧情 · 5 种结局 · 困难模式</b><br>一次解锁，这台设备永久可玩。</div>
-<input id="cd" placeholder="RAKI-XXXX-XXXX" autocomplete="off"><div id="msg" class="small"></div>
+<input id="cd" placeholder="DAY-XXXX" autocomplete="off"><div id="msg" class="small"></div>
 <button class="btn main" onclick="redeem()">解锁 🔑</button></div><button class="btn alt" onclick="start()">返回首页</button>`;scrollTo(0,0)}
 function redeem(){const c=$('cd').value.trim().toUpperCase().replace(/\s/g,'');if(HS.includes(fnv(c))){try{localStorage.setItem('adj_cn_unlock','1')}catch(e){}
 $('msg').textContent='✅ 解锁成功！';setTimeout(()=>{cur&&seen>=FREE?show(cur):start()},600)}else $('msg').textContent='❌ 兑换码不对，请检查后重新输入'}
